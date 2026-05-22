@@ -1,36 +1,75 @@
 /**
- * Output Schemas for {{SERVER_NAME}} MCP Tools
+ * Output payload types for Persona & Mapa Empatii MCP tools.
  *
- * Zod validation schemas for tool output responses.
- * These are RAW shapes (not wrapped in z.object) for SDK compatibility.
+ * These are TypeScript interfaces (not Zod schemas) — tool handlers produce
+ * already-validated payloads from internal sources (D1 reads, AI generation
+ * wrapped by `src/ai/persona-generator.ts`). MCP SDK accepts plain objects
+ * in `structuredContent`; we do not need runtime parsing at the boundary.
  *
  * @module schemas/outputs
  */
 
-import * as z from "zod/v4";
+import type {
+  EmpathyKey,
+  FrameType,
+  Gender,
+  MaslowLevel,
+  MotivationKey,
+  TriangleAxis,
+} from "../framework";
 
-/**
- * Output schema for example_tool
- *
- * TODO: Replace with your tool's output structure
- */
-export const ExampleToolOutputSchema = z.object({
-  message: z.string().meta({
-    description: "Result message"
-  }),
-  data: z.any().meta({
-    description: "Result data payload"
-  }),
-  widget_uri: z.string().optional().meta({
-    description: "UI resource URI for widget rendering (if applicable)"
-  })
-});
+/** 3F triangle weights — sum to 100 across the three axes. */
+export type Triangle3F = Record<TriangleAxis, number>;
 
-/**
- * Type inference from schema
- */
-export type ExampleToolOutput = z.infer<typeof ExampleToolOutputSchema>;
+/** Six independent motivation weights (0–100 each, NOT normalized). */
+export type Motivations = Record<MotivationKey, number>;
 
-// TODO: Add more output schemas for your tools
-// export const MyToolOutputSchema = z.object({...});
-// export type MyToolOutput = z.infer<typeof MyToolOutputSchema>;
+/** Sensory empathy map — five short text fields. */
+export type EmpathyMap = Record<EmpathyKey, string>;
+
+export interface PersonaPayload {
+  persona_id: string;
+  name: string;
+  age: number;
+  gender: Gender;
+  location: string;
+  profession: string;
+  business: string;
+  hints: string | null;
+  maslow_level: MaslowLevel;
+  triangle_3f: Triangle3F;
+  motivations: Motivations;
+  empathy_map: EmpathyMap;
+  deep_need: string | null;
+  pains: string[];
+  dreams: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FramePayload {
+  frame_id: string;
+  persona_id: string;
+  frame_type: FrameType;
+  text: string;
+  framework_note: string;
+  product_hook: string | null;
+  generated_at: string;
+}
+
+export interface PersonaListItem {
+  persona_id: string;
+  name: string;
+  business: string;
+  updated_at: string;
+}
+
+export type LoadPersonaPayload =
+  | (PersonaPayload & { mode: "single" })
+  | { mode: "list"; personas: PersonaListItem[] };
+
+export interface ExportPersonaPayload {
+  content: string;
+  filename: string;
+  byte_count: number;
+}

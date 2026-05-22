@@ -1,69 +1,57 @@
 /**
- * Server Instructions for {{SERVER_NAME}} MCP
+ * Server-level instructions wired via McpServer constructor's `instructions` field.
+ * Cloudflare canonical pattern (post-2026-04-25), NOT the legacy `serverInfo` assignment.
  *
- * Injected into LLM system prompt during MCP initialization.
- * Provides tool usage context, performance expectations, and constraints.
- *
- * Pattern: Purpose -> Capabilities -> Usage -> Performance -> Constraints
- *
- * Best Practices:
- * 1. Keep instructions concise (under 500 tokens)
- * 2. Focus on WHAT the tools do, not HOW they work internally
- * 3. Include concrete examples for complex use cases
- * 4. Mention interactive UI capabilities (SEP-1865)
- * 5. Document error handling and edge cases
+ * Length cap: <300 words (per `guides/server_instruction_guide.md`).
+ * Language: Polish examples + framework terms; structural English so the host LLM
+ * can index it as a system-level brief.
  */
 
 export const SERVER_INSTRUCTIONS = `
-{{SERVER_NAME}} - TODO: Add brief one-line description of what this server does
+Persona & Mapa Empatii — copywriter's persona builder using the Tkaczyk framework (Maslow + 3F + 6 motivations + sensory empathy map + "dlaczego dziś?"). Per-user persistence; personas recallable across conversations.
 
-## Available Tools
+## Key Capabilities
 
-### example-tool
-TODO: Describe what this tool does and when to use it.
-- Input: a string to process
-- Output: processed result with timestamp
-- Widget: displays results in an interactive UI
-
-## Interactive UI (MCP Apps)
-
-This server includes SEP-1865 MCP Apps support with interactive widgets:
-- Widgets load automatically when tools return results
-- Dark mode is inherited from the host client
-- Widgets have a fixed height container (500px — Claude inline card max; 600px gets silently clipped) to prevent layout issues
-- Data flows: Tool Result -> postMessage -> Widget State
+- Build a framework-grounded persona from a 1–2 sentence business description.
+- Refine any dimension via sliders/text edits (or natural language); regenerate single dimensions on demand.
+- Generate sensory copywriting frames (aspirational / pain / social) grounded in the persona.
+- Recall saved personas across sessions; export to Markdown or JSON.
 
 ## Usage Patterns
 
-1. **Basic Usage**: Call the example-tool with an input string
-2. **Widget Interaction**: Results are displayed in an embedded UI
-3. **Error Recovery**: If a widget fails to load, the tool can be re-invoked
+- Always call \`build_persona\` to create a fresh persona — it returns a persistent \`persona_id\` and renders the widget. Do NOT try to assemble a persona in chat without calling the tool.
+- For follow-up sessions, call \`load_persona\` (no args = list mode) when the user mentions an existing persona by name or "moje persony".
+- \`refine_persona\` is widget-driven; in chat, prefer to describe the desired change and let the model emit the delta (e.g., "zmień wiek na 35" → \`refine_persona({ persona_id, delta: { age: 35 } })\`).
+- \`generate_frame\` produces one frame per call — to fill all three types, make three calls.
 
-## Performance Expectations
+## Prompts
 
-- Widget load time: < 2 seconds
-- API response time: TODO: specify expected latency
-- Cache behavior: TODO: specify if results are cached
+- /nowa-persona: guided 30-second onboarding — asks 1–2 PL questions, then calls \`build_persona\`.
+- /przepisz-z-persona: rewrite a pasted copy snippet using a loaded persona as constraint set. Reflection runs on user's LLM (zero inference cost on our side).
 
-## Constraints and Limitations
+## Performance & Limits
 
-- TODO: List any rate limits
-- TODO: List any data size limits
-- TODO: List any authentication requirements
-- TODO: List any geographic or temporal restrictions
+- \`build_persona\` and \`generate_frame\`: ~2–3s (one Workers AI call each).
+- All other tools: <500ms (D1 only).
+- Each user has unlimited personas; \`load_persona\` list mode caps at 20.
 
-## Error Handling
+## Language
 
-Common errors and their solutions:
-- "User ID not found": User authentication expired, re-authenticate
-- "ASSETS binding not available": Deployment configuration issue
-- TODO: Add server-specific error scenarios
+Targets Polish-speaking users (wtyczki.ai). Respond to the user in Polish unless they explicitly switch language. Tool result content[] is already Polish — pass through verbatim, don't re-translate. Framework terminology (Maslow / 3F / "ramka aspiracyjna" / "dlaczego dziś") stays Polish even in English contexts; it's the source-material vocabulary.
+
+## Example queries (Polish)
+
+- "Stwórz personę dla mojego sklepu z butami biegowymi dla amatorów."
+- "Napisz ramkę aspiracyjną dla Małgosi."
+- "Pokaż moje ostatnie persony."
+- "Wyeksportuj Małgosię w markdown."
+- "Przepisz tę reklamę pod Małgosię: [...]"
 
 ## Important Notes
 
-- All tool calls are authenticated via OAuth or API key
-- Widget state is ephemeral (not persisted between sessions)
-- TODO: Add any other critical notes for LLM users
+- Authentication is automatic (WorkOS AuthKit JWT); no per-user credentials.
+- The widget is the primary surface for refinement; build_persona returns a fully formed draft so the widget opens with content, not a blank state.
+- Persona JSON exported via export_persona is forward-compatible with the planned audyt-copy server.
 `.trim();
 
 export default SERVER_INSTRUCTIONS;

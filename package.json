@@ -1,13 +1,13 @@
 {
-  "name": "{{SERVER_ID}}-mcp",
+  "name": "persona-empatia-mcp",
   "version": "1.0.0",
-  "description": "{{SERVER_DESCRIPTION}}",
+  "description": "Persona & Mapa Empatii — copywriter's persona builder using the Tkaczyk framework (Maslow + 3F + 6 motivations + sensory empathy map + 'dlaczego dziś?') on Cloudflare Workers.",
   "license": "MIT",
   "private": true,
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/{{GITHUB_ORG}}/{{SERVER_ID}}.git"
+    "url": "git+https://github.com/cloudflare-mcp-apps/persona-empatia.git"
   },
   "keywords": [
     "mcp",

@@ -132,15 +132,16 @@ export const UI_RESOURCES = {
    */
   widget: {
     /** Unique URI identifying this UI resource */
-    uri: "ui://{{SERVER_ID}}/widget",
+    uri: "ui://persona-empatia/widget",
 
     /** Resource name for registration and logging */
-    name: "main_widget",
+    name: "persona_widget",
 
     /** Human-readable description */
     description:
-      "Interactive widget for {{SERVER_NAME}}. " +
-      "TODO: Replace with a detailed description of what this widget displays and its features.",
+      "Interactive copywriter's persona builder using the Tkaczyk framework " +
+      "(Maslow pyramid + 3F triangle + 6 motivations + sensory empathy map + 'dlaczego dziś?'). " +
+      "Renders SVG visualizations with draggable inputs, generated frames, and per-dimension regeneration.",
 
     /** MIME type indicating this is an MCP App */
     mimeType: UI_MIME_TYPE,

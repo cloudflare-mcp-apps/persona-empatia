@@ -1,135 +1,166 @@
-import { StrictMode, useState, useCallback, useEffect, useRef } from 'react';
-import { createRoot } from 'react-dom/client';
-import { App, applyDocumentTheme, applyHostStyleVariables, applyHostFonts } from '@modelcontextprotocol/ext-apps';
-import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
-import type { WidgetState, ToolResultData } from '../lib/types';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import '../styles/globals.css';
+import { StrictMode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
+import {
+  App,
+  applyDocumentTheme,
+  applyHostStyleVariables,
+  applyHostFonts,
+} from "@modelcontextprotocol/ext-apps";
+import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
+import "../styles/globals.css";
+import type {
+  FramePayload,
+  FrameType,
+  PersonaPayload,
+  PersonaDelta,
+  RegenDimension,
+  EmpathyMap,
+  Motivations,
+  Triangle3F,
+  ExportPersonaPayload,
+  LoadPersonaPayload,
+  MaslowLevel,
+} from "../lib/types";
+import { MASLOW_TIERS_PL } from "../lib/types";
+import { PersonaHeader } from "./components/PersonaHeader";
+import { MaslowPyramid } from "./components/MaslowPyramid";
+import { Triangle3F as Triangle3FViz } from "./components/Triangle3F";
+import { MotivationBars } from "./components/MotivationBars";
+import { EmpathyGrid } from "./components/EmpathyGrid";
+import { DeepNeedCard } from "./components/DeepNeedCard";
+import { FramesPanel } from "./components/FramesPanel";
+import { debounce } from "./lib/debounce";
 
-// Template placeholders — `scripts/lifecycle/create-new-server.sh` replaces
-// these literal {{...}} strings via sed during scaffold (Step 3).
-const SERVER_NAME = "{{SERVER_NAME}}";
-const SERVER_ID = "{{SERVER_ID}}";
-
-// Prefixed logging pattern for better debugging
 const log = {
-  info: console.log.bind(console, '[Widget]'),
-  warn: console.warn.bind(console, '[Widget]'),
-  error: console.error.bind(console, '[Widget]'),
+  info: console.log.bind(console, "[persona]"),
+  warn: console.warn.bind(console, "[persona]"),
+  error: console.error.bind(console, "[persona]"),
 };
 
+type AppStatus = "idle" | "loading" | "ready" | "error";
+
+interface ToolResultEnvelope {
+  structuredContent?: unknown;
+  content?: Array<{ type: string; text?: string }>;
+  _meta?: { viewUUID?: unknown };
+}
+
+function isPersonaPayload(x: unknown): x is PersonaPayload {
+  return (
+    !!x &&
+    typeof x === "object" &&
+    "persona_id" in x &&
+    "empathy_map" in x &&
+    "triangle_3f" in x
+  );
+}
+
+function isFramePayload(x: unknown): x is FramePayload {
+  return !!x && typeof x === "object" && "frame_id" in x && "frame_type" in x;
+}
+
+function isLoadPersonaPayload(x: unknown): x is LoadPersonaPayload {
+  return !!x && typeof x === "object" && "mode" in x;
+}
+
+function isExportPayload(x: unknown): x is ExportPersonaPayload {
+  return !!x && typeof x === "object" && "content" in x && "filename" in x;
+}
+
+function dominantAxis(t: Triangle3F): string {
+  const max = Math.max(t.fuck, t.food, t.friends);
+  if (max === t.fuck) return "Fuck";
+  if (max === t.food) return "Food";
+  return "Friends";
+}
+
 function Widget() {
-  const [state, setState] = useState<WidgetState>({ status: 'idle' });
-  const [data, setData] = useState<ToolResultData | null>(null);
-  const [viewUUID, setViewUUID] = useState<string | null>(null);
-  const [hostContext, setHostContext] = useState<McpUiHostContext | undefined>();
-  const [canFullscreen, setCanFullscreen] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [app, setApp] = useState<App | null>(null);
   const [appError, setAppError] = useState<Error | null>(null);
+  const [status, setStatus] = useState<AppStatus>("idle");
+  const [persona, setPersona] = useState<PersonaPayload | null>(null);
+  const [frames, setFrames] = useState<FramePayload[]>([]);
+  const [hostContext, setHostContext] = useState<McpUiHostContext | undefined>();
+  const [regenInFlight, setRegenInFlight] = useState<RegenDimension | null>(null);
+  const [generatingFrame, setGeneratingFrame] = useState<FrameType | null>(null);
+  const [refineError, setRefineError] = useState<string | null>(null);
+  const personaRef = useRef<PersonaPayload | null>(null);
+  personaRef.current = persona;
+  const appRef = useRef<App | null>(null);
+  appRef.current = app;
 
-  // Manual App instantiation with autoResize: false (prevents width narrowing
-  // in Claude Desktop — see .claude/rules/OVERRIDES-ext-apps.md "useApp hook" entry).
+  // =========================================================================
+  // App lifecycle — handlers BEFORE connect, autoResize:false, sendSizeChanged
+  // =========================================================================
   useEffect(() => {
     const appInstance = new App(
-      { name: `${SERVER_ID}-mcp`, version: "1.0.0" },
-      {},                        // capabilities
-      { autoResize: false }      // CRITICAL: prevents width narrowing
+      { name: "persona-empatia-mcp", version: "1.0.0" },
+      {},
+      { autoResize: false },
     );
 
-    // Register ALL handlers BEFORE connect() — see widget-patterns.md "Handler Registration Order".
-
-    appInstance.ontoolinput = (params) => {
-      log.info('Tool input received:', params.arguments);
-      setState({ status: 'loading' });
-    };
-
-    appInstance.ontoolinputpartial = (params) => {
-      log.info('Partial input:', params.arguments);
-    };
+    appInstance.ontoolinput = () => setStatus("loading");
 
     appInstance.ontoolresult = (result) => {
-      log.info('Tool result received:', result);
       try {
-        const uuid = result._meta?.viewUUID ? String(result._meta.viewUUID) : undefined;
-        if (uuid) {
-          setViewUUID(uuid);
-          const savedState = localStorage.getItem(`view-state-${uuid}`);
-          if (savedState) {
-            log.info('Restoring saved state for viewUUID:', uuid);
-            // TODO: Apply restored state to your widget
-          }
-        }
+        const envelope = result as unknown as ToolResultEnvelope;
+        const payload = envelope.structuredContent;
+        if (!payload) return;
 
-        let resultData = result.structuredContent;
-        if (!resultData && result.content?.[0]) {
-          const firstContent = result.content[0];
-          if (firstContent.type === 'text' && 'text' in firstContent) {
-            resultData = JSON.parse(firstContent.text);
+        if (isLoadPersonaPayload(payload)) {
+          if (payload.mode === "single") {
+            const { mode: _mode, ...personaFields } = payload;
+            void _mode;
+            setPersona(personaFields as PersonaPayload);
+            setFrames([]); // server doesn't include frames in load_persona; widget starts fresh
+            setStatus("ready");
+          } else if (payload.mode === "list") {
+            // List mode: nothing to render in the persona widget; keep current state.
+            // The model decides which persona to load next.
+          } else if (payload.mode === "not_found") {
+            setStatus("error");
+            setRefineError("Nie znaleziono persony.");
           }
-        }
-
-        if (resultData) {
-          setData(resultData);
-          setState({ status: 'success', data: resultData });
+        } else if (isPersonaPayload(payload)) {
+          setPersona(payload);
+          setStatus("ready");
+          setRefineError(null);
+        } else if (isFramePayload(payload)) {
+          setFrames((prev) => [payload, ...prev]);
+          setGeneratingFrame(null);
+        } else if (isExportPayload(payload)) {
+          triggerDownload(payload);
         }
       } catch (e) {
-        log.error('Failed to parse result:', e);
-        setState({ status: 'error', error: 'Failed to parse result' });
+        log.error("ontoolresult parse error", e);
+        setStatus("error");
+        setRefineError("Nieprawidłowa odpowiedź serwera.");
       }
     };
 
-    appInstance.onerror = (error) => {
-      log.error('Error:', error);
-      setAppError(error instanceof Error ? error : new Error(String(error)));
-      setState({ status: 'error', error: String(error) });
+    appInstance.onerror = (err) => {
+      log.error("onerror", err);
+      setAppError(err instanceof Error ? err : new Error(String(err)));
     };
 
-    appInstance.onhostcontextchanged = (context) => {
-      setHostContext((prev) => ({ ...prev, ...context }));
-      if (context.theme) applyDocumentTheme(context.theme);
-      if (context.styles?.variables) applyHostStyleVariables(context.styles.variables);
-      if (context.styles?.css?.fonts) applyHostFonts(context.styles.css.fonts);
-
-      if (context.availableDisplayModes) {
-        setCanFullscreen(context.availableDisplayModes.includes('fullscreen'));
-      }
-      if (context.displayMode) {
-        setIsFullscreen(context.displayMode === 'fullscreen');
-        document.body.classList.toggle('fullscreen', context.displayMode === 'fullscreen');
-      }
+    appInstance.onhostcontextchanged = (ctx) => {
+      setHostContext((prev) => ({ ...prev, ...ctx }));
+      if (ctx.theme) applyDocumentTheme(ctx.theme);
+      if (ctx.styles?.variables) applyHostStyleVariables(ctx.styles.variables);
+      if (ctx.styles?.css?.fonts) applyHostFonts(ctx.styles.css.fonts);
     };
 
-    appInstance.ontoolcancelled = (params) => {
-      log.info('Tool call cancelled:', params.reason);
-      setState({ status: 'idle' });
-    };
+    appInstance.onteardown = async () => ({});
 
-    appInstance.onteardown = async (params) => {
-      log.info('Teardown requested:', params);
-      // TODO: Save view state using viewUUID when you have state to persist
-      // if (viewUUID) {
-      //   localStorage.setItem(`view-state-${viewUUID}`, JSON.stringify({ /* your state */ }));
-      // }
-      return {};
-    };
-
-    // CROSS-PLATFORM: call connect() with NO argument. The SDK auto-detects
-    // ChatGPT (openai-mcp-app transport) vs Claude (postMessage transport).
-    // Passing PostMessageTransport explicitly forces Claude-only and breaks
-    // ChatGPT handshake. See new_docs/cross_platform_mcp_apps.md §TL;DR-4.
-    appInstance.connect()
+    appInstance
+      .connect()
       .then(() => {
         setApp(appInstance);
         setHostContext(appInstance.getHostContext());
-        // CRITICAL: autoResize:false suppresses ALL SDK resize messages — sendSizeChanged
-        // must be called explicitly so the host knows to make the iframe 500px tall.
-        // h-[500px] on the div only sizes the div inside the iframe, not the iframe itself.
         appInstance.sendSizeChanged({ height: 500 });
       })
       .catch((e) => {
-        log.error('Failed to connect:', e);
+        log.error("connect failed", e);
         setAppError(e instanceof Error ? e : new Error(String(e)));
       });
 
@@ -138,197 +169,242 @@ function Widget() {
     };
   }, []);
 
-  // Escape key exits fullscreen
-  useEffect(() => {
-    if (!isFullscreen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') toggleFullscreen();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isFullscreen]);
-
   // =========================================================================
-  // SDK v1.0.0+ Features
+  // Server calls
   // =========================================================================
 
-  // 1. YAML Frontmatter for Model Context Updates
-  // Use when widget state should inform the AI model
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const updateModelContext = useCallback(async (contextData: Record<string, unknown>) => {
-    if (!app) return;
-    const yamlFrontmatter = Object.entries(contextData)
-      .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
-      .join('\n');
+  /** Send a delta to the server, optionally with a regen dimension. */
+  const callRefine = useCallback(
+    async (delta: PersonaDelta, regenerate?: RegenDimension) => {
+      const current = personaRef.current;
+      const a = appRef.current;
+      if (!a || !current) return;
+      try {
+        if (regenerate) setRegenInFlight(regenerate);
+        await a.callServerTool({
+          name: "refine_persona",
+          arguments: {
+            persona_id: current.persona_id,
+            delta: delta as unknown as Record<string, unknown>,
+            ...(regenerate ? { regenerate } : {}),
+          },
+        });
+        // Server response arrives via ontoolresult and replaces persona state.
+      } catch (e) {
+        log.error("refine_persona failed", e);
+        setRefineError("Nie udało się zaktualizować persony.");
+      } finally {
+        if (regenerate) setRegenInFlight(null);
+      }
+    },
+    [],
+  );
 
-    await app.updateModelContext({
-      content: [{
-        type: "text",
-        text: `---\n${yamlFrontmatter}\n---\n\nWidget state updated.`
-      }]
-    });
-  }, [app]);
+  const debouncedRefine = useMemo(
+    () => debounce((delta: PersonaDelta) => callRefine(delta), 300),
+    [callRefine],
+  );
 
-  // 2. Fullscreen Mode Toggle (when supported by host)
-  const toggleFullscreen = useCallback(async () => {
-    if (!app || !canFullscreen) return;
-    const ctx = app.getHostContext();
-    const targetMode = ctx?.displayMode === "fullscreen" ? "inline" : "fullscreen";
-    try {
-      const result = await app.requestDisplayMode({ mode: targetMode });
-      log.info('Display mode changed to:', result.mode);
-    } catch (e) {
-      log.error('Failed to change display mode:', e);
-    }
-  }, [app, canFullscreen]);
+  /** Apply a local optimistic patch + schedule a debounced server commit. */
+  const patchPersona = useCallback(
+    (patch: Partial<PersonaPayload>) => {
+      setPersona((prev) => (prev ? { ...prev, ...patch } : prev));
+      debouncedRefine(patch as PersonaDelta);
+    },
+    [debouncedRefine],
+  );
 
-  // 3. Report errors to model (for graceful degradation)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const reportErrorToModel = useCallback(async (errorMessage: string) => {
-    if (!app) return;
-    await app.updateModelContext({
-      content: [{
-        type: "text",
-        text: `Error: ${errorMessage}`
-      }]
-    });
-  }, [app]);
+  const requestRegenerate = useCallback(
+    (dimension: RegenDimension) => {
+      callRefine({} as PersonaDelta, dimension);
+    },
+    [callRefine],
+  );
 
-  // 4. Offscreen Pause via IntersectionObserver
-  // Pauses polling/animations when widget scrolls offscreen; resumes on re-entry.
-  // Critical on mobile (battery) and for widgets with setInterval / video / WebGL.
-  // See production_docs/MCP_DESIGN_ADVANCED_PATTERNS.md §17.
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(true);
+  const requestFrame = useCallback(
+    async (type: FrameType) => {
+      const current = personaRef.current;
+      const a = appRef.current;
+      if (!a || !current) return;
+      try {
+        setGeneratingFrame(type);
+        await a.callServerTool({
+          name: "generate_frame",
+          arguments: { persona_id: current.persona_id, frame_type: type },
+        });
+      } catch (e) {
+        log.error("generate_frame failed", e);
+        setGeneratingFrame(null);
+      }
+    },
+    [],
+  );
 
-  useEffect(() => {
-    const target = rootRef.current;
-    if (!target) return;
-    const io = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry.isIntersecting),
-      { threshold: 0.01 },  // any pixel visible = active
-    );
-    io.observe(target);
-    return () => io.disconnect();
+  const requestExport = useCallback(
+    async (format: "markdown" | "json") => {
+      const current = personaRef.current;
+      const a = appRef.current;
+      if (!a || !current) return;
+      try {
+        await a.callServerTool({
+          name: "export_persona",
+          arguments: { persona_id: current.persona_id, format },
+        });
+      } catch (e) {
+        log.error("export_persona failed", e);
+      }
+    },
+    [],
+  );
+
+  const removeFrameLocal = useCallback((frameId: string) => {
+    setFrames((prev) => prev.filter((f) => f.frame_id !== frameId));
   }, []);
 
-  // Example: gate polling on visibility. Uncomment when widget polls server.
-  // useEffect(() => {
-  //   if (!isVisible || !app) return;       // paused — don't poll
-  //   const id = setInterval(() => { /* poll */ }, 5_000);
-  //   return () => clearInterval(id);
-  // }, [isVisible, app]);
-  void isVisible;  // silence unused warning until polling is wired up
+  // =========================================================================
+  // Model context updates — keep the model aware of persona summary
+  // =========================================================================
+  useEffect(() => {
+    if (!app || !persona) return;
+    const summary = `Persona: ${persona.name}, ${persona.age}, ${persona.profession} (${persona.location}). Maslow ${persona.maslow_level} (${MASLOW_TIERS_PL[persona.maslow_level - 1]}). 3F dominanta: ${dominantAxis(persona.triangle_3f)}. Dlaczego dziś: ${persona.deep_need ?? "—"}.`;
+    app.updateModelContext({
+      content: [{ type: "text", text: summary }],
+    }).catch((e) => log.warn("updateModelContext failed", e));
+  }, [app, persona]);
 
-  // Safe area insets — apply as padding to avoid device notches/system UI.
-  // Required for mobile compliance (Tier 1) — see widget-patterns.md §Mobile Compatibility.
-  // Touch targets must be ≥ 44pt (use `h-11 min-w-11` on Buttons).
-  const safeAreaStyle = {
+  // =========================================================================
+  // Safe area + render
+  // =========================================================================
+  const safeAreaStyle: React.CSSProperties = {
     paddingTop: hostContext?.safeAreaInsets?.top,
     paddingRight: hostContext?.safeAreaInsets?.right,
     paddingBottom: hostContext?.safeAreaInsets?.bottom,
     paddingLeft: hostContext?.safeAreaInsets?.left,
   };
 
-  // TODO: Implement your widget UI here
-  // This is a template - replace with actual functionality
-
-  if (state.status === 'idle') {
+  if (appError) {
     return (
-      <div className="h-[500px] flex flex-col items-center justify-center" style={safeAreaStyle}>
-        <Card className="w-full max-w-md mx-4">
-          <CardHeader>
-            <CardTitle>{SERVER_NAME}</CardTitle>
-            <CardDescription>
-              TODO: Add widget description and initial state
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Waiting for tool input...
-            </p>
-          </CardContent>
-        </Card>
+      <div className="h-[500px] flex items-center justify-center p-4 text-sm text-destructive" style={safeAreaStyle}>
+        Błąd: {appError.message}
       </div>
     );
   }
 
-  if (state.status === 'loading') {
+  if (status === "idle" && !persona) {
     return (
-      <div className="h-[500px] flex flex-col items-center justify-center" style={safeAreaStyle}>
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <span className="ml-3">Loading...</span>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="h-[500px] flex items-center justify-center p-4 text-[11px] text-muted-foreground" style={safeAreaStyle}>
+        Łączenie z hostem…
       </div>
     );
   }
 
-  if (state.status === 'error') {
+  if (status === "loading" && !persona) {
     return (
-      <div className="h-[500px] flex flex-col items-center justify-center" style={safeAreaStyle}>
-        <Card className="w-full max-w-md mx-4 border-red-200">
-          <CardHeader>
-            <CardTitle className="text-red-500">Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-red-500">{state.error}</p>
-            <Button
-              className="mt-4"
-              onClick={() => setState({ status: 'idle' })}
-            >
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="h-[500px] flex items-center justify-center p-4 text-[11px] text-muted-foreground" style={safeAreaStyle}>
+        Generowanie persony… (~2-3 s)
       </div>
     );
   }
 
-  // Success state - display result
+  if (!persona) {
+    return (
+      <div className="h-[500px] flex items-center justify-center p-4 text-[11px] text-muted-foreground" style={safeAreaStyle}>
+        Brak persony. Wywołaj <code className="px-1">build_persona</code> w czacie.
+      </div>
+    );
+  }
+
   return (
-    <div ref={rootRef} className="h-[500px] flex flex-col overflow-hidden" style={safeAreaStyle}>
-      <Card className="flex-1 m-4 flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>{SERVER_NAME}</CardTitle>
-            <CardDescription>
-              {data?.message || 'Result received'}
-            </CardDescription>
-          </div>
-          {/* Fullscreen toggle button (shows only when host supports it) */}
-          {canFullscreen && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleFullscreen}
-              title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-            >
-              {isFullscreen ? '⛶' : '⛶'}
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent className="flex-1 overflow-auto">
-          {/* TODO: Render your result data here */}
-          <pre className="text-sm bg-muted p-4 rounded overflow-auto">
-            {JSON.stringify(data, null, 2)}
-          </pre>
-        </CardContent>
-      </Card>
+    <div className="h-[500px] flex flex-col bg-background text-foreground overflow-hidden" style={safeAreaStyle}>
+      <PersonaHeader
+        persona={persona}
+        onPatch={patchPersona}
+        onExportMd={() => requestExport("markdown")}
+        onExportJson={() => requestExport("json")}
+      />
+
+      {/* Three-column metric strip */}
+      <div className="flex gap-2 px-2 pt-2 flex-shrink-0">
+        <div className="flex-shrink-0">
+          <MaslowPyramid
+            level={persona.maslow_level}
+            onChange={(level: MaslowLevel) => patchPersona({ maslow_level: level })}
+          />
+        </div>
+        <div className="flex-shrink-0">
+          <Triangle3FViz
+            value={persona.triangle_3f}
+            onChange={(t: Triangle3F) => patchPersona({ triangle_3f: t })}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <MotivationBars
+            value={persona.motivations}
+            onChange={(m: Motivations) => patchPersona({ motivations: m })}
+          />
+        </div>
+      </div>
+
+      {/* Empathy map */}
+      <div className="px-2 pt-2 flex-shrink-0">
+        <EmpathyGrid
+          value={persona.empathy_map}
+          onChange={(e: EmpathyMap) => patchPersona({ empathy_map: e })}
+          onRegenerate={() => requestRegenerate("empathy_map")}
+          regenerating={regenInFlight === "empathy_map"}
+        />
+      </div>
+
+      {/* Deep need */}
+      <div className="px-2 pt-2 flex-shrink-0">
+        <DeepNeedCard
+          value={persona.deep_need}
+          onChange={(v) => patchPersona({ deep_need: v })}
+          onRegenerate={() => requestRegenerate("deep_need")}
+          regenerating={regenInFlight === "deep_need"}
+        />
+      </div>
+
+      {/* Frames panel — scrollable, fills remaining space */}
+      <div className="flex-1 min-h-0 px-2 pt-2 pb-2">
+        <FramesPanel
+          frames={frames}
+          generating={generatingFrame}
+          onGenerate={requestFrame}
+          onRemove={removeFrameLocal}
+        />
+      </div>
+
+      {refineError && (
+        <div className="text-[10px] text-destructive px-2 pb-1">{refineError}</div>
+      )}
     </div>
   );
 }
 
-// Mount the app
-const container = document.getElementById('root');
+/** Trigger a browser download from an ExportPersonaPayload. */
+function triggerDownload(payload: ExportPersonaPayload) {
+  try {
+    const mime = payload.filename.endsWith(".json") ? "application/json" : "text/markdown";
+    const blob = new Blob([payload.content], { type: `${mime};charset=utf-8` });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = payload.filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (e) {
+    console.error("[persona] download failed", e);
+  }
+}
+
+const container = document.getElementById("root");
 if (container) {
   createRoot(container).render(
     <StrictMode>
       <Widget />
-    </StrictMode>
+    </StrictMode>,
   );
 }

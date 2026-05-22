@@ -1,5 +1,5 @@
 /**
- * {{SERVER_DESCRIPTION}} — Cloudflare canonical pattern (createMcpHandler)
+ * Persona & Mapa Empatii — Cloudflare canonical pattern (createMcpHandler)
  *
  * Architecture:
  * - JWT pre-handler verifies WorkOS AuthKit tokens via JWKS, then looks up the

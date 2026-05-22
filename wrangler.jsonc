@@ -26,7 +26,7 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "{{SERVER_ID}}",
+  "name": "persona-empatia",
   "main": "src/index.ts",
   "compatibility_date": "2025-03-10",
   "compatibility_flags": ["nodejs_compat"],
@@ -61,12 +61,12 @@
   ],
 
   /**
-   * OPTIONAL: Workers AI binding for AI models
-   * Uncomment if you need to use Workers AI:
+   * Workers AI binding — required for persona draft + frame generation.
+   * Routes through AI Gateway `mcp-production-gateway` (see src/ai/persona-generator.ts).
    */
-  // "ai": {
-  //   "binding": "AI"
-  // },
+  "ai": {
+    "binding": "AI"
+  },
 
   /**
    * OPTIONAL: R2 bucket binding for file storage
@@ -99,7 +99,7 @@
    */
   "routes": [
     {
-      "pattern": "{{SERVER_ID}}.wtyczki.ai",
+      "pattern": "persona-empatia.wtyczki.ai",
       "custom_domain": true
     }
   ],

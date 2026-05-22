@@ -43,10 +43,10 @@ export interface Env {
   // Uncomment and configure these as needed for your server
 
   /**
-   * Workers AI for LLM inference
-   * Uncomment in wrangler.jsonc: "ai": { "binding": "AI" }
+   * Workers AI for LLM inference — required for persona generation.
+   * Routes through AI Gateway `mcp-production-gateway`.
    */
-  // AI?: Ai;
+  AI: Ai;
 
   /**
    * R2 storage bucket for file storage

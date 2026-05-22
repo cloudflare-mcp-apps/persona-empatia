@@ -1,152 +1,131 @@
 /**
- * Tool Descriptions and Metadata
+ * Tool descriptions for Persona & Mapa Empatii.
  *
- * Centralized metadata for all MCP server tools.
- * Follows the 4-part description pattern from TOOL_DESCRIPTION_BEST_PRACTICES.md
- *
- * Pattern: Purpose -> Returns -> Use Case -> Constraints
- *
- * Security Notes:
- * - NO API/service names in descriptions (only functional capabilities)
- * - NO implementation details (e.g., "fast and cheap", "bounding box")
+ * 4-part description pattern: purpose → returns → use case → constraints.
  *
  * @module tools/descriptions
  */
 
-/**
- * Metadata structure for a single tool
- */
 export interface ToolMetadata {
-  /** Display name for UI and tool listings */
   title: string;
-
-  /** 4-part description pattern */
   description: {
-    /** Part 1: Action verb + what it does (1-2 sentences) */
     part1_purpose: string;
-
-    /** Part 2: Explicit data fields returned (1 sentence) */
     part2_returns: string;
-
-    /** Part 3: When/why to use this tool (1 sentence) */
     part3_useCase: string;
-
-    /** Part 4: Limitations, edge cases, constraints (1-3 sentences) */
     part4_constraints: string;
   };
-
-  /** Use case examples for documentation and testing */
   examples: {
-    /** Short scenario name */
     scenario: string;
-
-    /** Detailed description of the use case */
     description: string;
   }[];
 }
 
-/**
- * Tool metadata registry
- *
- * TODO: Replace example tool with your actual tools
- *
- * Contains complete metadata for all tools including descriptions
- * and use case examples.
- */
 export const TOOL_METADATA = {
-  /**
-   * Example Tool
-   *
-   * TODO: Replace with your actual tool definitions
-   * Each tool should follow the 4-part description pattern:
-   * 1. Purpose: What it does
-   * 2. Returns: What data it returns
-   * 3. Use Case: When to use it
-   * 4. Constraints: Limitations and edge cases
-   */
-  "example-tool": {
-    title: "Example Tool",
-
+  build_persona: {
+    title: "Stwórz personę copywriterską",
     description: {
-      part1_purpose: "Performs an example operation on the provided input.",
-
-      part2_returns: "Returns the result object with processed data, status, and metadata fields.",
-
-      part3_useCase: "Use this when you need to demonstrate the tool pattern or test the MCP server setup.",
-
-      part4_constraints: "Note: This is a placeholder tool. Replace with your actual implementation. Input must be non-empty."
+      part1_purpose:
+        "Generate a copywriter's persona draft from a 1–2 sentence business description, using the Tkaczyk framework: assigned name + age + profession + location, Maslow level the product targets, 3F triangle weights, 6-motivation profile, and an initial sensory empathy map.",
+      part2_returns:
+        "Returns the full persona JSON plus a persistent persona_id, then renders the interactive widget for refinement.",
+      part3_useCase:
+        "Use when the user says 'stwórz personę', 'kim jest mój klient', 'do kogo mam pisać', or pastes a product/business description and asks for a target audience.",
+      part4_constraints:
+        "Note: persona language is Polish (framework fidelity); business description must be 5–500 chars.",
     },
-
     examples: [
       {
-        scenario: "Basic usage",
-        description: "Call the tool with a simple input to verify server connectivity"
+        scenario: "Business + hints",
+        description: "Build persona for 'kursy hiszpańskiego online dla pracujących', hints '20–40 lat, home office'.",
       },
       {
-        scenario: "Error handling",
-        description: "Test tool behavior with invalid input to verify error responses"
-      }
-    ]
-  } as const satisfies ToolMetadata,
+        scenario: "Business only",
+        description: "Build persona from just 'sklep z butami biegowymi dla amatorów' — LLM fills demographic + framework dimensions.",
+      },
+    ],
+  },
 
-  // TODO: Add your tools here following this pattern:
-  //
-  // "your-tool-name": {
-  //   title: "Your Tool Name",
-  //   description: {
-  //     part1_purpose: "What the tool does...",
-  //     part2_returns: "Returns X, Y, Z...",
-  //     part3_useCase: "Use when...",
-  //     part4_constraints: "Note: limitations..."
-  //   },
-  //   examples: [
-  //     { scenario: "Example 1", description: "..." }
-  //   ]
-  // } as const satisfies ToolMetadata,
+  refine_persona: {
+    title: "Dopracuj personę",
+    description: {
+      part1_purpose:
+        "Apply a partial update (delta) to a saved persona — used by the widget when the user moves sliders, edits fields, or asks for regeneration of one dimension.",
+      part2_returns:
+        "Returns the full updated persona with updated_at bumped, so the widget can re-render consistently.",
+      part3_useCase:
+        "Use when the widget triggers refinement (callServerTool from sliders/inputs) or the user in chat says 'zmień Małgosi wiek na 35', 'przesuń ją wyżej w piramidzie Maslowa'.",
+      part4_constraints:
+        "Note: 3F weights are renormalized to sum 100 server-side; regenerate runs AFTER delta is applied.",
+    },
+    examples: [
+      { scenario: "Field edit", description: "Change age to 35 via { delta: { age: 35 } }." },
+      { scenario: "Regenerate empathy map", description: "Re-roll all 5 empathy fields jointly with { regenerate: 'empathy_map' }." },
+    ],
+  },
 
-} as const;
+  generate_frame: {
+    title: "Wygeneruj ramkę copywriterską",
+    description: {
+      part1_purpose:
+        "Generate a single copywriting 'ramka' for a saved persona — aspirational (future success scene), pain (current pain scene), or social (belonging scene) — using Workers AI with the persona's empathy map + 3F weights + Maslow level as grounding context.",
+      part2_returns:
+        "Returns one frame as 2–4 sentences of sensory Polish copy plus the framework reasoning so the user understands why this frame fits this persona.",
+      part3_useCase:
+        "Use when the user asks for 'ramka aspiracyjna', 'ramka bólu', 'napisz scenkę', or clicks the '+ nowa ramka' button in the widget.",
+      part4_constraints:
+        "Note: each call appends one frame to the persona's frame list; product_hook is optional.",
+    },
+    examples: [
+      { scenario: "Aspirational frame", description: "Generate aspirational scene for the loaded persona." },
+      { scenario: "Frame with product hook", description: "Pass product_hook to weave a specific feature into the scene." },
+    ],
+  },
 
-/**
- * Type-safe tool name (for autocomplete and validation)
- */
+  load_persona: {
+    title: "Wczytaj zapisaną personę",
+    description: {
+      part1_purpose:
+        "Recall a previously built persona by ID, or list the user's recent personas (default 5 most recent) so the model can resume work in a new conversation without rebuilding from scratch.",
+      part2_returns:
+        "Returns the same persona shape as build_persona (single mode) or a list of recent personas with summary fields (list mode).",
+      part3_useCase:
+        "Use when the user references 'Małgosia z poprzedniej rozmowy', 'wczorajsza persona', 'moje persony', or the model needs persona context to fulfil a follow-up copywriting task.",
+      part4_constraints:
+        "Note: list mode caps at 20 results; unknown persona_id returns a graceful 'not found' (not an error).",
+    },
+    examples: [
+      { scenario: "List recent", description: "Call without args to see most-recent personas." },
+      { scenario: "Load by ID", description: "Pass persona_id to hydrate the widget with that persona." },
+    ],
+  },
+
+  export_persona: {
+    title: "Wyeksportuj personę",
+    description: {
+      part1_purpose:
+        "Serialize a persona to Markdown (workshop-friendly, headings + sections) or JSON (machine-friendly, for feeding into other tools or storage) and return it inline so the widget can trigger app.downloadFile() or the user can copy/paste.",
+      part2_returns:
+        "Returns the rendered content string, the filename (slugified persona name + date), and the byte count.",
+      part3_useCase:
+        "Use when the user asks to 'wyeksportuj personę', 'daj mi tę personę w markdown', or clicks the export button in the widget.",
+      part4_constraints:
+        "Note: does NOT write a file server-side — the widget is responsible for download/clipboard.",
+    },
+    examples: [
+      { scenario: "Markdown export", description: "Download Małgosia as workshop-ready Markdown." },
+      { scenario: "JSON export", description: "Get persona + frames as JSON for downstream tools (planned: audyt-copy)." },
+    ],
+  },
+} as const satisfies Record<string, ToolMetadata>;
+
 export type ToolName = keyof typeof TOOL_METADATA;
 
-/**
- * Generate full tool description from metadata
- *
- * Concatenates all 4 parts of the description pattern into a single string
- * suitable for the MCP tool registration `description` field.
- *
- * @param toolName - Name of the tool (type-safe)
- * @returns Full description string following 4-part pattern
- *
- * @example
- * ```typescript
- * const desc = getToolDescription("example-tool");
- * // Returns: "Performs an example operation... Returns the result... Use this when... Note: ..."
- * ```
- */
 export function getToolDescription(toolName: ToolName): string {
   const meta = TOOL_METADATA[toolName];
   const { part1_purpose, part2_returns, part3_useCase, part4_constraints } = meta.description;
-
   return `${part1_purpose} ${part2_returns} ${part3_useCase} ${part4_constraints}`;
 }
 
-/**
- * Get all use case examples for a tool
- *
- * Retrieves documented use cases for testing and documentation purposes.
- *
- * @param toolName - Name of the tool (type-safe)
- * @returns Array of use case examples
- *
- * @example
- * ```typescript
- * const examples = getToolExamples("example-tool");
- * // Returns: [{ scenario: "Basic usage", description: "..." }, ...]
- * ```
- */
 export function getToolExamples(toolName: ToolName): readonly { scenario: string; description: string }[] {
   return TOOL_METADATA[toolName].examples;
 }
