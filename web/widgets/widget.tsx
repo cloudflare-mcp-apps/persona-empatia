@@ -30,6 +30,9 @@ import { EmpathyGrid } from "./components/EmpathyGrid";
 import { DeepNeedCard } from "./components/DeepNeedCard";
 import { FramesPanel } from "./components/FramesPanel";
 import { debounce } from "./lib/debounce";
+import { dominantAxis } from "./lib/persona-helpers";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const log = {
   info: console.log.bind(console, "[persona]"),
@@ -65,13 +68,6 @@ function isLoadPersonaPayload(x: unknown): x is LoadPersonaPayload {
 
 function isExportPayload(x: unknown): x is ExportPersonaPayload {
   return !!x && typeof x === "object" && "content" in x && "filename" in x;
-}
-
-function dominantAxis(t: Triangle3F): string {
-  const max = Math.max(t.fuck, t.food, t.friends);
-  if (max === t.fuck) return "Fuck";
-  if (max === t.food) return "Food";
-  return "Friends";
 }
 
 function Widget() {
@@ -274,7 +270,7 @@ function Widget() {
   // =========================================================================
   useEffect(() => {
     if (!app || !persona) return;
-    const summary = `Persona: ${persona.name}, ${persona.age}, ${persona.profession} (${persona.location}). Maslow ${persona.maslow_level} (${MASLOW_TIERS_PL[persona.maslow_level - 1]}). 3F dominanta: ${dominantAxis(persona.triangle_3f)}. Dlaczego dziś: ${persona.deep_need ?? "—"}.`;
+    const summary = `Persona: ${persona.name}, ${persona.age}, ${persona.profession} (${persona.location}). Maslow ${persona.maslow_level} (${MASLOW_TIERS_PL[persona.maslow_level - 1]}). 3F dominanta: ${dominantAxis(persona.triangle_3f).label}. Dlaczego dziś: ${persona.deep_need ?? "—"}.`;
     app.updateModelContext({
       content: [{ type: "text", text: summary }],
     }).catch((e) => log.warn("updateModelContext failed", e));
@@ -324,68 +320,92 @@ function Widget() {
 
   return (
     <div className="h-[500px] flex flex-col bg-background text-foreground overflow-hidden" style={safeAreaStyle}>
-      <PersonaHeader
-        persona={persona}
-        onPatch={patchPersona}
-        onExportMd={() => requestExport("markdown")}
-        onExportJson={() => requestExport("json")}
-      />
-
-      {/* Three-column metric strip */}
-      <div className="flex gap-2 px-2 pt-2 flex-shrink-0">
-        <div className="flex-shrink-0">
-          <MaslowPyramid
-            level={persona.maslow_level}
-            onChange={(level: MaslowLevel) => patchPersona({ maslow_level: level })}
-          />
-        </div>
-        <div className="flex-shrink-0">
-          <Triangle3FViz
-            value={persona.triangle_3f}
-            onChange={(t: Triangle3F) => patchPersona({ triangle_3f: t })}
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <MotivationBars
-            value={persona.motivations}
-            onChange={(m: Motivations) => patchPersona({ motivations: m })}
-          />
-        </div>
-      </div>
-
-      {/* Empathy map */}
-      <div className="px-2 pt-2 flex-shrink-0">
-        <EmpathyGrid
-          value={persona.empathy_map}
-          onChange={(e: EmpathyMap) => patchPersona({ empathy_map: e })}
-          onRegenerate={() => requestRegenerate("empathy_map")}
-          regenerating={regenInFlight === "empathy_map"}
+      <div className="flex-shrink-0">
+        <PersonaHeader
+          persona={persona}
+          onPatch={patchPersona}
+          onExportMd={() => requestExport("markdown")}
+          onExportJson={() => requestExport("json")}
         />
       </div>
 
-      {/* Deep need */}
-      <div className="px-2 pt-2 flex-shrink-0">
-        <DeepNeedCard
-          value={persona.deep_need}
-          onChange={(v) => patchPersona({ deep_need: v })}
-          onRegenerate={() => requestRegenerate("deep_need")}
-          regenerating={regenInFlight === "deep_need"}
-        />
-      </div>
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="p-3 space-y-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Persona kwantyfikacyjna</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-4 pt-0">
+              <MaslowPyramid
+                level={persona.maslow_level}
+                onChange={(level: MaslowLevel) => patchPersona({ maslow_level: level })}
+              />
+              <Triangle3FViz
+                value={persona.triangle_3f}
+                onChange={(t: Triangle3F) => patchPersona({ triangle_3f: t })}
+              />
+            </CardContent>
+          </Card>
 
-      {/* Frames panel — scrollable, fills remaining space */}
-      <div className="flex-1 min-h-0 px-2 pt-2 pb-2">
-        <FramesPanel
-          frames={frames}
-          generating={generatingFrame}
-          onGenerate={requestFrame}
-          onRemove={removeFrameLocal}
-        />
-      </div>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">6 motywacji</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <MotivationBars
+                value={persona.motivations}
+                onChange={(m: Motivations) => patchPersona({ motivations: m })}
+              />
+            </CardContent>
+          </Card>
 
-      {refineError && (
-        <div className="text-[10px] text-destructive px-2 pb-1">{refineError}</div>
-      )}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Mapa empatii</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <EmpathyGrid
+                value={persona.empathy_map}
+                onChange={(e: EmpathyMap) => patchPersona({ empathy_map: e })}
+                onRegenerate={() => requestRegenerate("empathy_map")}
+                regenerating={regenInFlight === "empathy_map"}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">„Dlaczego dziś?"</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <DeepNeedCard
+                value={persona.deep_need}
+                onChange={(v) => patchPersona({ deep_need: v })}
+                onRegenerate={() => requestRegenerate("deep_need")}
+                regenerating={regenInFlight === "deep_need"}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Ramki copywriterskie</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <FramesPanel
+                frames={frames}
+                generating={generatingFrame}
+                onGenerate={requestFrame}
+                onRemove={removeFrameLocal}
+              />
+            </CardContent>
+          </Card>
+
+          {refineError && (
+            <p className="text-xs text-destructive">{refineError}</p>
+          )}
+        </div>
+      </ScrollArea>
     </div>
   );
 }

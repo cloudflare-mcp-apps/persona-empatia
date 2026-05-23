@@ -1,3 +1,8 @@
+import { RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+
 interface Props {
   value: string | null;
   onChange: (next: string) => void;
@@ -7,27 +12,36 @@ interface Props {
 
 export function DeepNeedCard({ value, onChange, onRegenerate, regenerating }: Props) {
   return (
-    <div className="flex flex-col">
-      <div className="flex items-center justify-between mb-1">
-        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-          „Dlaczego dziś?" (bodziec → potrzeba głęboka)
+    <div className="flex flex-col gap-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground leading-snug">
+            Co się zmieniło u klienta TERAZ, że zaczyna myśleć o zakupie? (bodziec → potrzeba głęboka)
+          </p>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1.5 flex-shrink-0"
           onClick={onRegenerate}
           disabled={regenerating}
-          className="text-[10px] px-2 py-0.5 rounded border border-border hover:bg-muted disabled:opacity-50 h-6"
+          aria-label="Regeneruj bodziec"
         >
-          {regenerating ? "..." : "🔄"}
-        </button>
+          <RefreshCw className={cn("h-3.5 w-3.5", regenerating && "animate-spin")} />
+          <span className="text-xs">Regeneruj</span>
+        </Button>
       </div>
-      <textarea
+      <Textarea
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
-        className={`text-[11px] leading-snug p-2 rounded border border-border bg-background resize-none h-12 transition-opacity ${regenerating ? "opacity-50" : ""}`}
+        className={cn(
+          "text-sm leading-snug resize-none min-h-[72px]",
+          regenerating && "opacity-50",
+        )}
         maxLength={280}
-        placeholder="Co się zmieniło u klienta TERAZ, że zaczyna myśleć o zakupie?"
+        placeholder="np. „Główny klient zagroził odejściem, jeśli nie wdrożymy AI..."
         disabled={regenerating}
+        rows={3}
       />
     </div>
   );
