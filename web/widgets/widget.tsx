@@ -139,8 +139,16 @@ function Widget() {
     };
 
     appInstance.onerror = (err) => {
+      const message = err instanceof Error ? err.message : String(err);
+      // Non-fatal transport noise: some hosts (e.g. mcpjam-inspector 2.5.x) re-emit
+      // the initialize response on hostContext/tool updates, which the SDK's
+      // pending-request map no longer recognizes. Don't blow up the UI for these.
+      if (message.includes("unknown message ID") || message.includes("unknown message id")) {
+        log.warn("ignoring duplicate/unknown response from host", err);
+        return;
+      }
       log.error("onerror", err);
-      setAppError(err instanceof Error ? err : new Error(String(err)));
+      setAppError(err instanceof Error ? err : new Error(message));
     };
 
     appInstance.onhostcontextchanged = (ctx) => {
