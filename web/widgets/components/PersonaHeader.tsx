@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Download, Pencil } from "lucide-react";
 import type { PersonaPayload } from "../../lib/types";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,23 @@ interface Props {
   onExportJson: () => void;
 }
 
+const NAME_MAX = 40;
+const PROF_MAX = 80;
+const LOC_MAX = 80;
+const AGE_MIN = 13;
+const AGE_MAX = 99;
+
 export function PersonaHeader({ persona, onPatch, onExportMd, onExportJson }: Props) {
   const [editing, setEditing] = useState(false);
+  // Local draft state for inputs that need validation gating — avoids sending
+  // intermediate invalid values to the server (e.g. age="2" en route to "25").
+  const [draftAge, setDraftAge] = useState(String(persona.age));
+  const [draftName, setDraftName] = useState(persona.name);
+
+  useEffect(() => {
+    setDraftAge(String(persona.age));
+    setDraftName(persona.name);
+  }, [persona.age, persona.name]);
 
   return (
     <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-background">
@@ -21,31 +36,62 @@ export function PersonaHeader({ persona, onPatch, onExportMd, onExportJson }: Pr
           <div className="flex gap-1.5">
             <Input
               className="h-8 text-sm"
-              value={persona.name}
-              onChange={(e) => onPatch({ name: e.target.value })}
+              maxLength={NAME_MAX}
+              value={draftName}
+              onChange={(e) => {
+                const next = e.target.value;
+                setDraftName(next);
+                const trimmed = next.trim();
+                if (trimmed.length >= 1 && trimmed.length <= NAME_MAX) {
+                  onPatch({ name: trimmed });
+                }
+              }}
+              onBlur={() => {
+                if (draftName.trim().length === 0) setDraftName(persona.name);
+              }}
               placeholder="Imię"
+              aria-label="Imię persony"
             />
             <Input
               className="h-8 w-16 text-sm"
               type="number"
-              min={13}
-              max={99}
-              value={persona.age}
-              onChange={(e) => onPatch({ age: Number(e.target.value) })}
+              inputMode="numeric"
+              min={AGE_MIN}
+              max={AGE_MAX}
+              value={draftAge}
+              onChange={(e) => {
+                const next = e.target.value;
+                setDraftAge(next);
+                const n = Number(next);
+                if (next !== "" && Number.isInteger(n) && n >= AGE_MIN && n <= AGE_MAX) {
+                  onPatch({ age: n });
+                }
+              }}
+              onBlur={() => {
+                const n = Number(draftAge);
+                if (draftAge === "" || !Number.isInteger(n) || n < AGE_MIN || n > AGE_MAX) {
+                  setDraftAge(String(persona.age));
+                }
+              }}
+              aria-label={`Wiek persony (${AGE_MIN}–${AGE_MAX})`}
             />
           </div>
           <div className="flex gap-1.5">
             <Input
               className="h-8 text-xs flex-1"
+              maxLength={PROF_MAX}
               value={persona.profession}
               onChange={(e) => onPatch({ profession: e.target.value })}
               placeholder="Profesja"
+              aria-label="Profesja persony"
             />
             <Input
               className="h-8 text-xs w-28"
+              maxLength={LOC_MAX}
               value={persona.location}
               onChange={(e) => onPatch({ location: e.target.value })}
               placeholder="Lokalizacja"
+              aria-label="Lokalizacja persony"
             />
           </div>
         </div>
