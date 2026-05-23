@@ -3,6 +3,10 @@
  *
  * Applies a partial delta to an existing persona, optionally regenerates one
  * dimension via Workers AI (after delta is applied), persists, returns full payload.
+ *
+ * Graceful miss: unknown persona_id returns mode:"not_found" payload + a PL
+ * recovery hint instead of an isError result, so the model can self-correct
+ * by calling load_persona.
  */
 
 import type { Env } from "../types";
@@ -12,7 +16,6 @@ import { getPersona, updatePersona } from "../db/queries";
 import {
   regenerateDimension,
   renormalizeTriangle,
-  AiGenerationError,
 } from "../ai/persona-generator";
 import { logger, startTimer } from "../shared/logger";
 import type { ToolResult } from "./build_persona";
@@ -21,7 +24,7 @@ export async function refinePersona(
   env: Env,
   userId: string,
   input: RefinePersonaParams,
-): Promise<ToolResult<PersonaPayload>> {
+): Promise<ToolResult<PersonaPayload | { mode: "not_found"; persona_id: string }>> {
   const actionId = crypto.randomUUID();
   const timer = startTimer();
 
@@ -40,14 +43,18 @@ export async function refinePersona(
 
   const current = await getPersona(env.DB, userId, input.persona_id);
   if (!current) {
-    logger.error({
-      event: "tool_failed",
+    logger.info({
+      event: "tool_completed",
       tool: "refine_persona",
       user_id: userId,
+      user_email: "",
       action_id: actionId,
-      error: "persona_not_found",
+      duration_ms: timer(),
     });
-    throw new AiGenerationError("Nie znaleziono persony o podanym ID.");
+    return {
+      text_pl: `Nie znaleziono persony o ID ${input.persona_id}. Wywołaj load_persona bez argumentów, aby zobaczyć listę zapisanych person.`,
+      payload: { mode: "not_found", persona_id: input.persona_id },
+    };
   }
 
   const merged = applyDelta(current, input.delta ?? {});

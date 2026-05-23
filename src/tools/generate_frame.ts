@@ -3,6 +3,10 @@
  *
  * Generates one copywriting frame (aspirational / pain / social) grounded on
  * a saved persona via Workers AI, persists the frame row, returns the payload.
+ *
+ * Graceful miss: unknown persona_id returns mode:"not_found" payload + a PL
+ * recovery hint instead of an isError result, so the model can self-correct
+ * by calling load_persona.
  */
 
 import type { Env } from "../types";
@@ -10,7 +14,7 @@ import type { GenerateFrameParams } from "../schemas/inputs";
 import type { FramePayload } from "../schemas/outputs";
 import { FRAME_TYPE_LABELS_PL } from "../framework";
 import { getPersona, insertFrame } from "../db/queries";
-import { generateFrame as aiGenerateFrame, AiGenerationError } from "../ai/persona-generator";
+import { generateFrame as aiGenerateFrame } from "../ai/persona-generator";
 import { logger, startTimer } from "../shared/logger";
 import type { ToolResult } from "./build_persona";
 
@@ -18,7 +22,7 @@ export async function generateFrame(
   env: Env,
   userId: string,
   input: GenerateFrameParams,
-): Promise<ToolResult<FramePayload>> {
+): Promise<ToolResult<FramePayload | { mode: "not_found"; persona_id: string }>> {
   const actionId = crypto.randomUUID();
   const timer = startTimer();
 
@@ -33,14 +37,18 @@ export async function generateFrame(
 
   const persona = await getPersona(env.DB, userId, input.persona_id);
   if (!persona) {
-    logger.error({
-      event: "tool_failed",
+    logger.info({
+      event: "tool_completed",
       tool: "generate_frame",
       user_id: userId,
+      user_email: "",
       action_id: actionId,
-      error: "persona_not_found",
+      duration_ms: timer(),
     });
-    throw new AiGenerationError("Nie znaleziono persony o podanym ID.");
+    return {
+      text_pl: `Nie znaleziono persony o ID ${input.persona_id}. Wywołaj load_persona bez argumentów, aby zobaczyć listę zapisanych person.`,
+      payload: { mode: "not_found", persona_id: input.persona_id },
+    };
   }
 
   const productHook = input.product_hook ?? null;

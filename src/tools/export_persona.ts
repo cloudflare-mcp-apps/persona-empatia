@@ -4,6 +4,10 @@
  * Serializes a persona (plus its frames) to Markdown or JSON. Returns the
  * content inline — does NOT write a file server-side; the widget triggers
  * `app.downloadFile()` or copy-to-clipboard.
+ *
+ * Graceful miss: unknown persona_id returns mode:"not_found" payload + a PL
+ * recovery hint instead of an isError result, so the model can self-correct
+ * by calling load_persona.
  */
 
 import type { Env } from "../types";
@@ -16,7 +20,6 @@ import {
   MOTIVATIONS_PL,
 } from "../framework";
 import { getFrames, getPersona } from "../db/queries";
-import { AiGenerationError } from "../ai/persona-generator";
 import { logger, startTimer } from "../shared/logger";
 import type { ToolResult } from "./build_persona";
 
@@ -24,7 +27,7 @@ export async function exportPersona(
   env: Env,
   userId: string,
   input: ExportPersonaParams,
-): Promise<ToolResult<ExportPersonaPayload>> {
+): Promise<ToolResult<ExportPersonaPayload | { mode: "not_found"; persona_id: string }>> {
   const actionId = crypto.randomUUID();
   const timer = startTimer();
 
@@ -39,14 +42,18 @@ export async function exportPersona(
 
   const persona = await getPersona(env.DB, userId, input.persona_id);
   if (!persona) {
-    logger.error({
-      event: "tool_failed",
+    logger.info({
+      event: "tool_completed",
       tool: "export_persona",
       user_id: userId,
+      user_email: "",
       action_id: actionId,
-      error: "persona_not_found",
+      duration_ms: timer(),
     });
-    throw new AiGenerationError("Nie znaleziono persony o podanym ID.");
+    return {
+      text_pl: `Nie znaleziono persony o ID ${input.persona_id}. Wywołaj load_persona bez argumentów, aby zobaczyć listę zapisanych person.`,
+      payload: { mode: "not_found", persona_id: input.persona_id },
+    };
   }
   const frames = await getFrames(env.DB, userId, input.persona_id);
 

@@ -55,7 +55,7 @@ export const TOOL_METADATA = {
       part3_useCase:
         "Use when the widget triggers refinement (callServerTool from sliders/inputs) or the user in chat says 'zmień Małgosi wiek na 35', 'przesuń ją wyżej w piramidzie Maslowa'.",
       part4_constraints:
-        "Note: 3F weights are renormalized to sum 100 server-side; regenerate runs AFTER delta is applied.",
+        "Note: 3F weights are renormalized to sum 100 server-side; regenerate runs AFTER delta is applied; unknown persona_id returns a graceful 'not found' (not an error) — call load_persona to recover.",
     },
     examples: [
       { scenario: "Field edit", description: "Change age to 35 via { delta: { age: 35 } }." },
@@ -73,7 +73,7 @@ export const TOOL_METADATA = {
       part3_useCase:
         "Use when the user asks for 'ramka aspiracyjna', 'ramka bólu', 'napisz scenkę', or clicks the '+ nowa ramka' button in the widget.",
       part4_constraints:
-        "Note: each call appends one frame to the persona's frame list; product_hook is optional.",
+        "Note: each call appends one frame to the persona's frame list; product_hook is optional; unknown persona_id returns a graceful 'not found' (not an error) — call load_persona to recover.",
     },
     examples: [
       { scenario: "Aspirational frame", description: "Generate aspirational scene for the loaded persona." },
@@ -109,7 +109,7 @@ export const TOOL_METADATA = {
       part3_useCase:
         "Use when the user asks to 'wyeksportuj personę', 'daj mi tę personę w markdown', or clicks the export button in the widget.",
       part4_constraints:
-        "Note: does NOT write a file server-side — the widget is responsible for download/clipboard.",
+        "Note: does NOT write a file server-side — the widget is responsible for download/clipboard; unknown persona_id returns a graceful 'not found' (not an error) — call load_persona to recover.",
     },
     examples: [
       { scenario: "Markdown export", description: "Download Małgosia as workshop-ready Markdown." },
