@@ -31,8 +31,8 @@ import { DeepNeedCard } from "./components/DeepNeedCard";
 import { FramesPanel } from "./components/FramesPanel";
 import { debounce } from "./lib/debounce";
 import { dominantAxis } from "./lib/persona-helpers";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 const log = {
   info: console.log.bind(console, "[persona]"),
@@ -329,83 +329,84 @@ function Widget() {
         />
       </div>
 
-      <ScrollArea className="flex-1 min-h-0">
-        <div className="p-3 space-y-3">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Persona kwantyfikacyjna</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4 pt-0">
+      <Tabs defaultValue="profil" className="flex-1 min-h-0 flex flex-col">
+        <TabsList className="grid grid-cols-4 mx-3 mt-2 flex-shrink-0">
+          <TabsTrigger value="profil" className="text-xs">Profil</TabsTrigger>
+          <TabsTrigger value="motywacje" className="text-xs">Motywacje</TabsTrigger>
+          <TabsTrigger value="empatia" className="text-xs">Empatia</TabsTrigger>
+          <TabsTrigger value="ramki" className="text-xs gap-1">
+            Ramki
+            {frames.length > 0 && (
+              <Badge variant="secondary" className="h-4 px-1 text-[10px] font-mono">
+                {frames.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3 pt-3">
+          <TabsContent value="profil" className="mt-0 grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium mb-1.5">
+                Maslow
+              </p>
               <MaslowPyramid
                 level={persona.maslow_level}
                 onChange={(level: MaslowLevel) => patchPersona({ maslow_level: level })}
               />
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium mb-1.5">
+                Trójkąt 3F
+              </p>
               <Triangle3FViz
                 value={persona.triangle_3f}
                 onChange={(t: Triangle3F) => patchPersona({ triangle_3f: t })}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </TabsContent>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">6 motywacji</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <MotivationBars
-                value={persona.motivations}
-                onChange={(m: Motivations) => patchPersona({ motivations: m })}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Mapa empatii</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <EmpathyGrid
-                value={persona.empathy_map}
-                onChange={(e: EmpathyMap) => patchPersona({ empathy_map: e })}
-                onRegenerate={() => requestRegenerate("empathy_map")}
-                regenerating={regenInFlight === "empathy_map"}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">„Dlaczego dziś?"</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
+          <TabsContent value="motywacje" className="mt-0 space-y-3">
+            <MotivationBars
+              value={persona.motivations}
+              onChange={(m: Motivations) => patchPersona({ motivations: m })}
+            />
+            <div className="border-t border-border pt-3">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium mb-1.5">
+                „Dlaczego dziś?"
+              </p>
               <DeepNeedCard
                 value={persona.deep_need}
                 onChange={(v) => patchPersona({ deep_need: v })}
                 onRegenerate={() => requestRegenerate("deep_need")}
                 regenerating={regenInFlight === "deep_need"}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </TabsContent>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Ramki copywriterskie</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <FramesPanel
-                frames={frames}
-                generating={generatingFrame}
-                onGenerate={requestFrame}
-                onRemove={removeFrameLocal}
-              />
-            </CardContent>
-          </Card>
+          <TabsContent value="empatia" className="mt-0">
+            <EmpathyGrid
+              value={persona.empathy_map}
+              onChange={(e: EmpathyMap) => patchPersona({ empathy_map: e })}
+              onRegenerate={() => requestRegenerate("empathy_map")}
+              regenerating={regenInFlight === "empathy_map"}
+            />
+          </TabsContent>
+
+          <TabsContent value="ramki" className="mt-0">
+            <FramesPanel
+              frames={frames}
+              generating={generatingFrame}
+              onGenerate={requestFrame}
+              onRemove={removeFrameLocal}
+            />
+          </TabsContent>
 
           {refineError && (
-            <p className="text-xs text-destructive">{refineError}</p>
+            <p className="mt-2 text-xs text-destructive">{refineError}</p>
           )}
         </div>
-      </ScrollArea>
+      </Tabs>
     </div>
   );
 }

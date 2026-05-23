@@ -1,6 +1,5 @@
 import { useRef, useCallback } from "react";
 import type { Triangle3F as Triangle3FType } from "../../lib/types";
-import { Badge } from "@/components/ui/badge";
 import {
   buildTriangle,
   cartesianToTriangle3F,
@@ -14,9 +13,9 @@ interface Props {
 
 export function Triangle3F({ value, onChange }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const width = 220;
-  const height = 200;
-  const geom = buildTriangle(width, height, 28);
+  const width = 240;
+  const height = 220;
+  const geom = buildTriangle(width, height, 36);
   const dotPos = triangle3FToCartesian(value, geom);
 
   const handlePointer = useCallback(
@@ -31,18 +30,46 @@ export function Triangle3F({ value, onChange }: Props) {
     [geom, onChange],
   );
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<SVGSVGElement>) => {
+      const STEP = 5;
+      let next: Triangle3FType | null = null;
+      if (e.key === "ArrowUp") {
+        next = { fuck: Math.min(100, value.fuck + STEP), food: value.food, friends: value.friends };
+      } else if (e.key === "ArrowDown") {
+        next = { fuck: Math.max(0, value.fuck - STEP), food: value.food, friends: value.friends };
+      } else if (e.key === "ArrowLeft") {
+        next = { fuck: value.fuck, food: Math.min(100, value.food + STEP), friends: value.friends };
+      } else if (e.key === "ArrowRight") {
+        next = { fuck: value.fuck, food: value.food, friends: Math.min(100, value.friends + STEP) };
+      }
+      if (next) {
+        e.preventDefault();
+        const sum = next.fuck + next.food + next.friends;
+        if (sum > 0) {
+          onChange({
+            fuck: Math.round((next.fuck / sum) * 100),
+            food: Math.round((next.food / sum) * 100),
+            friends: Math.round((next.friends / sum) * 100),
+          });
+        }
+      }
+    },
+    [value, onChange],
+  );
+
   const trianglePath = `M ${geom.fuck.x},${geom.fuck.y} L ${geom.food.x},${geom.food.y} L ${geom.friends.x},${geom.friends.y} Z`;
 
   return (
-    <div className="flex flex-col items-center gap-2 w-full">
+    <div className="flex flex-col items-center gap-1 w-full">
       <svg
         ref={svgRef}
-        width={width}
-        height={height}
         viewBox={`0 0 ${width} ${height}`}
-        className="touch-none cursor-crosshair"
+        preserveAspectRatio="xMidYMid meet"
+        className="touch-none cursor-crosshair w-full max-w-[260px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
         role="img"
-        aria-label={`Trójkąt 3F: Fuck ${value.fuck}, Food ${value.food}, Friends ${value.friends}`}
+        tabIndex={0}
+        aria-label={`Trójkąt 3F: Fuck ${value.fuck}, Food ${value.food}, Friends ${value.friends}. Strzałki nawigują.`}
         onPointerDown={(e) => {
           e.currentTarget.setPointerCapture(e.pointerId);
           handlePointer(e);
@@ -51,6 +78,7 @@ export function Triangle3F({ value, onChange }: Props) {
           if (e.buttons !== 0) handlePointer(e);
         }}
         onPointerUp={(e) => e.currentTarget.releasePointerCapture(e.pointerId)}
+        onKeyDown={handleKeyDown}
       >
         <path
           d={trianglePath}
@@ -60,49 +88,43 @@ export function Triangle3F({ value, onChange }: Props) {
         />
         <text
           x={geom.fuck.x}
-          y={geom.fuck.y - 8}
+          y={geom.fuck.y - 12}
           fontSize={13}
           fontWeight={600}
           textAnchor="middle"
           fill="hsl(var(--foreground))"
         >
-          Fuck
+          Fuck {value.fuck}
         </text>
         <text
-          x={geom.food.x - 4}
-          y={geom.food.y + 16}
+          x={geom.food.x}
+          y={geom.food.y + 18}
           fontSize={13}
           fontWeight={600}
-          textAnchor="end"
+          textAnchor="middle"
           fill="hsl(var(--foreground))"
         >
-          Food
+          Food {value.food}
         </text>
         <text
-          x={geom.friends.x + 4}
-          y={geom.friends.y + 16}
+          x={geom.friends.x}
+          y={geom.friends.y + 18}
           fontSize={13}
           fontWeight={600}
-          textAnchor="start"
+          textAnchor="middle"
           fill="hsl(var(--foreground))"
         >
-          Friends
+          Friends {value.friends}
         </text>
         <circle
           cx={dotPos.x}
           cy={dotPos.y}
-          r={7}
+          r={8}
           fill="hsl(var(--primary))"
           stroke="hsl(var(--primary-foreground))"
           strokeWidth={2}
         />
       </svg>
-
-      <div className="flex gap-1.5 flex-wrap justify-center">
-        <Badge variant="outline" className="font-mono tabular-nums">Fuck {value.fuck}</Badge>
-        <Badge variant="outline" className="font-mono tabular-nums">Food {value.food}</Badge>
-        <Badge variant="outline" className="font-mono tabular-nums">Friends {value.friends}</Badge>
-      </div>
     </div>
   );
 }
