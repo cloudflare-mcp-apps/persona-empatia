@@ -1,0 +1,59 @@
+{
+  "toolName": "build_persona",
+  "toolArguments": {
+    "businessDescription": "Coachka kariery dla kobiet 35+ wracających na rynek pracy po przerwie macierzyńskiej."
+  },
+  "toolResult": {
+    "content": [
+      { "type": "text", "text": "Persona zbudowana: Joanna, 38 lat, była menedżerka marketingu, Warszawa." }
+    ],
+    "structuredContent": {
+      "persona_id": "fixture-persona-001",
+      "name": "Joanna",
+      "age": 38,
+      "gender": "female",
+      "location": "Warszawa, dzielnica Ursynów",
+      "profession": "była menedżerka marketingu, obecnie na urlopie wychowawczym kończącym 3. rok",
+      "business": "Coachka kariery dla kobiet 35+ wracających na rynek pracy po przerwie macierzyńskiej",
+      "hints": null,
+      "maslow_level": 4,
+      "triangle_3f": { "fuck": 15, "food": 35, "friends": 50 },
+      "motivations": {
+        "pain": 72,
+        "pleasure": 28,
+        "fear": 68,
+        "hope": 74,
+        "belonging": 65,
+        "rejection": 48
+      },
+      "empathy_map": {
+        "sees": "Posty znajomych na LinkedIn o awansach i wystąpieniach na konferencjach. Reklamy bootcampów IT obiecujące „zmiana branży w 3 miesiące”. Rachunki za przedszkole rosnące szybciej niż jej oszczędności.",
+        "hears": "„Wracaj kiedy chcesz, ale rynek bardzo się zmienił.” Pytania na rozmowach: „Co Pani robiła przez te trzy lata?”. Mężowski komentarz: „Spokojnie, daj sobie czas” — pomocny w intencji, frustrujący w odbiorze.",
+        "feels": "Niepokój przed pierwszą rozmową rekrutacyjną. Wstyd, że nie zna już bieżących narzędzi marketingowych. Tęsknotę za poczuciem zawodowej tożsamości. Czasem ulgę, że jest mamą — i wyrzuty sumienia za tę ulgę.",
+        "says": "„Muszę wrócić do siebie, nie tylko do pracy.” „Nie chcę przyjmować pierwszej oferty — chcę dobrze.” „Czuję, że jestem na zakręcie, ale nie wiem dokąd skręcić.”",
+        "does": "Przegląda LinkedIn dwa razy dziennie, ale boi się zaktualizować swój profil. Zapisuje się na webinary o powrocie do pracy i ogląda je w nocy po położeniu dzieci. Czyta książki o produktywności, ale rzadko kończy."
+      },
+      "deep_need": "Odbudować poczucie zawodowej wartości — nie jako matka „która też pracuje”, lecz jako profesjonalistka, która ma coś unikalnego do zaoferowania właśnie dzięki przerwie, nie pomimo niej.",
+      "pains": [
+        "Lęk przed odrzuceniem na rozmowach kwalifikacyjnych ze względu na lukę w CV.",
+        "Poczucie, że konkurencja (mężczyźni i bezdzietne koleżanki) wyprzedziła ją o lata.",
+        "Brak aktualnej sieci kontaktów zawodowych — większość znajomych z poprzedniej pracy „poszła dalej”.",
+        "Finansowa presja — zmniejszający się budżet domowy, drożejące przedszkole.",
+        "Wewnętrzny konflikt między ambicją zawodową a poczuciem winy wobec dzieci."
+      ],
+      "dreams": [
+        "Wrócić do pracy w roli, która szanuje jej dotychczasowe doświadczenie — nie zaczynać od juniora.",
+        "Mieć elastyczność (hybryda lub zdalna), żeby móc odebrać dzieci ze szkoły.",
+        "Czuć dumę, gdy córka pyta: „Mamo, czym Ty się zajmujesz?”.",
+        "Spotkać mentorkę, która sama przeszła przez powrót po macierzyństwie.",
+        "Zarobić swoje pierwsze 10 000 zł od czasu urlopu i zaprosić męża na kolację „z własnej pensji”."
+      ],
+      "created_at": "2026-05-23T10:00:00.000Z",
+      "updated_at": "2026-05-23T10:00:00.000Z"
+    },
+    "_meta": {
+      "viewUUID": "fixture-view-001"
+    },
+    "isError": false
+  }
+}

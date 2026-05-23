@@ -1,0 +1,581 @@
+{
+  "target": {
+    "kind": "http",
+    "label": "https://persona-empatia.wtyczki.ai/mcp",
+    "url": "https://persona-empatia.wtyczki.ai/mcp",
+    "commandArgs": [],
+    "envKeys": [],
+    "headerNames": [],
+    "timeoutMs": 30000,
+    "hasAccessToken": true,
+    "hasRefreshToken": false,
+    "hasClientSecret": false
+  },
+  "generatedAt": "2026-05-23T13:22:02.607Z",
+  "status": "ready",
+  "probe": {
+    "url": "https://persona-empatia.wtyczki.ai/mcp",
+    "protocolVersion": "2025-11-25",
+    "status": "ready",
+    "transport": {
+      "selected": "streamable-http",
+      "attempts": [
+        {
+          "name": "streamable_initialize",
+          "request": {
+            "method": "POST",
+            "url": "https://persona-empatia.wtyczki.ai/mcp",
+            "headers": {
+              "Content-Type": "application/json",
+              "Accept": "application/json, text/event-stream",
+              "Authorization": "[REDACTED]"
+            },
+            "body": {
+              "jsonrpc": "2.0",
+              "id": 1,
+              "method": "initialize",
+              "params": {
+                "protocolVersion": "2025-11-25",
+                "capabilities": {},
+                "clientInfo": {
+                  "name": "mcpjam-probe",
+                  "version": "1.0.0"
+                }
+              }
+            }
+          },
+          "durationMs": 752,
+          "response": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-allow-origin": "*",
+              "access-control-expose-headers": "mcp-session-id",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cache-control": "no-cache",
+              "cf-ray": "a0045dffa8a7b601-WAW",
+              "connection": "keep-alive",
+              "content-type": "text/event-stream",
+              "date": "Sat, 23 May 2026 13:22:03 GMT",
+              "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+              "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=XZygHCQ1iaQWqZbApN241kLzE29%2B5MEH%2FRLKKXNBiss7iyPM55izHT9o7ixWoe4ZZ7F%2BhLMmBDuTylH2HmksBt1u%2BL%2B6ZK1W4sPhACgP5AS9m%2Bw%2BYoXrF0BUXkkMUpAabRGH32MxgZwS98AeNQ%3D%3D\"}]}",
+              "server": "cloudflare",
+              "transfer-encoding": "chunked"
+            },
+            "contentType": "text/event-stream"
+          }
+        }
+      ]
+    },
+    "initialize": {
+      "contentType": "text/event-stream"
+    },
+    "oauth": {
+      "required": false,
+      "optional": false,
+      "registrationStrategies": []
+    }
+  },
+  "connection": {
+    "status": "connected",
+    "detail": "Connected and initialized successfully."
+  },
+  "initInfo": {
+    "protocolVersion": "2025-11-25",
+    "transport": "streamable-http",
+    "serverCapabilities": {
+      "prompts": {
+        "listChanged": true
+      },
+      "resources": {
+        "listChanged": true
+      },
+      "tools": {
+        "listChanged": true
+      }
+    },
+    "serverVersion": {
+      "name": "Persona & Mapa Empatii",
+      "version": "1.0.0"
+    },
+    "instructions": "Persona & Mapa Empatii — copywriter's persona builder using the Tkaczyk framework (Maslow + 3F + 6 motivations + sensory empathy map + \"dlaczego dziś?\"). Per-user persistence; personas recallable across conversations.\n\n## Key Capabilities\n\n- Build a framework-grounded persona from a 1–2 sentence business description.\n- Refine any dimension via sliders/text edits (or natural language); regenerate single dimensions on demand.\n- Generate sensory copywriting frames (aspirational / pain / social) grounded in the persona.\n- Recall saved personas across sessions; export to Markdown or JSON.\n\n## Usage Patterns\n\n- Always call `build_persona` to create a fresh persona — it returns a persistent `persona_id` and renders the widget. Do NOT try to assemble a persona in chat without calling the tool.\n- For follow-up sessions, call `load_persona` (no args = list mode) when the user mentions an existing persona by name or \"moje persony\".\n- `refine_persona` is widget-driven; in chat, prefer to describe the desired change and let the model emit the delta (e.g., \"zmień wiek na 35\" → `refine_persona({ persona_id, delta: { age: 35 } })`).\n- `generate_frame` produces one frame per call — to fill all three types, make three calls.\n\n## Prompts\n\n- /nowa-persona: guided 30-second onboarding — asks 1–2 PL questions, then calls `build_persona`.\n- /przepisz-z-persona: rewrite a pasted copy snippet using a loaded persona as constraint set. Reflection runs on user's LLM (zero inference cost on our side).\n\n## Performance & Limits\n\n- `build_persona` and `generate_frame`: ~2–3s (one Workers AI call each).\n- All other tools: <500ms (D1 only).\n- Each user has unlimited personas; `load_persona` list mode caps at 20.\n\n## Language\n\nTargets Polish-speaking users (wtyczki.ai). Respond to the user in Polish unless they explicitly switch language. Tool result content[] is already Polish — pass through verbatim, don't re-translate. Framework terminology (Maslow / 3F / \"ramka aspiracyjna\" / \"dlaczego dziś\") stays Polish even in English contexts; it's the source-material vocabulary.\n\n## Example queries (Polish)\n\n- \"Stwórz personę dla mojego sklepu z butami biegowymi dla amatorów.\"\n- \"Napisz ramkę aspiracyjną dla Małgosi.\"\n- \"Pokaż moje ostatnie persony.\"\n- \"Wyeksportuj Małgosię w markdown.\"\n- \"Przepisz tę reklamę pod Małgosię: [...]\"\n\n## Important Notes\n\n- Authentication is automatic (WorkOS AuthKit JWT); no per-user credentials.\n- The widget is the primary surface for refinement; build_persona returns a fully formed draft so the widget opens with content, not a blank state.\n- Persona JSON exported via export_persona is forward-compatible with the planned audyt-copy server.",
+    "clientCapabilities": {
+      "extensions": {
+        "io.modelcontextprotocol/ui": {
+          "mimeTypes": [
+            "text/html;profile=mcp-app"
+          ]
+        }
+      }
+    }
+  },
+  "capabilities": {
+    "prompts": {
+      "listChanged": true
+    },
+    "resources": {
+      "listChanged": true
+    },
+    "tools": {
+      "listChanged": true
+    }
+  },
+  "tools": [
+    {
+      "name": "build_persona",
+      "title": "Stwórz personę copywriterską",
+      "description": "Generate a copywriter's persona draft from a 1–2 sentence business description, using the Tkaczyk framework: assigned name + age + profession + location, Maslow level the product targets, 3F triangle weights, 6-motivation profile, and an initial sensory empathy map. Returns the full persona JSON plus a persistent persona_id, then renders the interactive widget for refinement. Use when the user says 'stwórz personę', 'kim jest mój klient', 'do kogo mam pisać', or pastes a product/business description and asks for a target audience. Note: persona language is Polish (framework fidelity); business description must be 5–500 chars.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "business": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 500,
+            "description": "What the user sells, in 1–2 sentences. Example: 'kursy hiszpańskiego online dla pracujących'."
+          },
+          "hints": {
+            "description": "Optional known audience traits or context. Example: '20–40 lat, home office, pre-intermediate level'.",
+            "type": "string",
+            "maxLength": 200
+          },
+          "persona_name_hint": {
+            "description": "Optional first name to assign to the persona. Omit to let the LLM choose a Polish name fitting the demographic.",
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        "required": [
+          "business"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "refine_persona",
+      "title": "Dopracuj personę",
+      "description": "Apply a partial update (delta) to a saved persona — used by the widget when the user moves sliders, edits fields, or asks for regeneration of one dimension. Returns the full updated persona with updated_at bumped, so the widget can re-render consistently. Use when the widget triggers refinement (callServerTool from sliders/inputs) or the user in chat says 'zmień Małgosi wiek na 35', 'przesuń ją wyżej w piramidzie Maslowa'. Note: 3F weights are renormalized to sum 100 server-side; regenerate runs AFTER delta is applied.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "persona_id": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 40,
+            "description": "ID of the persona to update."
+          },
+          "delta": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "age": {
+                "type": "integer",
+                "minimum": 13,
+                "maximum": 99
+              },
+              "gender": {
+                "type": "string",
+                "enum": [
+                  "female",
+                  "male",
+                  "nonbinary",
+                  "other"
+                ]
+              },
+              "location": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "profession": {
+                "type": "string",
+                "maxLength": 80
+              },
+              "maslow_level": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "triangle_3f": {
+                "description": "Weights — server renormalizes to sum 100 if off.",
+                "type": "object",
+                "properties": {
+                  "fuck": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "food": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "friends": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  }
+                },
+                "required": [
+                  "fuck",
+                  "food",
+                  "friends"
+                ]
+              },
+              "motivations": {
+                "description": "Each motivation 0–100, independent (not normalized).",
+                "type": "object",
+                "properties": {
+                  "pain": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "pleasure": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "fear": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "hope": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "belonging": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "rejection": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  }
+                },
+                "required": [
+                  "pain",
+                  "pleasure",
+                  "fear",
+                  "hope",
+                  "belonging",
+                  "rejection"
+                ]
+              },
+              "empathy_map": {
+                "type": "object",
+                "properties": {
+                  "sees": {
+                    "type": "string",
+                    "maxLength": 280
+                  },
+                  "hears": {
+                    "type": "string",
+                    "maxLength": 280
+                  },
+                  "feels": {
+                    "type": "string",
+                    "maxLength": 280
+                  },
+                  "says": {
+                    "type": "string",
+                    "maxLength": 280
+                  },
+                  "does": {
+                    "type": "string",
+                    "maxLength": 280
+                  }
+                }
+              },
+              "deep_need": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 280
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "pains": {
+                "maxItems": 5,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 140
+                }
+              },
+              "dreams": {
+                "maxItems": 5,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 140
+                }
+              }
+            },
+            "description": "Any subset of persona fields to overwrite. Omit (or pass {}) to only trigger regeneration."
+          },
+          "regenerate": {
+            "description": "Re-run Workers AI for one dimension using current persona state as grounding. Runs AFTER delta is applied.",
+            "type": "string",
+            "enum": [
+              "empathy_map",
+              "pains",
+              "dreams",
+              "deep_need"
+            ]
+          }
+        },
+        "required": [
+          "persona_id",
+          "delta"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "generate_frame",
+      "title": "Wygeneruj ramkę copywriterską",
+      "description": "Generate a single copywriting 'ramka' for a saved persona — aspirational (future success scene), pain (current pain scene), or social (belonging scene) — using Workers AI with the persona's empathy map + 3F weights + Maslow level as grounding context. Returns one frame as 2–4 sentences of sensory Polish copy plus the framework reasoning so the user understands why this frame fits this persona. Use when the user asks for 'ramka aspiracyjna', 'ramka bólu', 'napisz scenkę', or clicks the '+ nowa ramka' button in the widget. Note: each call appends one frame to the persona's frame list; product_hook is optional.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "persona_id": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 40,
+            "description": "ID of the persona to ground the frame on."
+          },
+          "frame_type": {
+            "type": "string",
+            "enum": [
+              "aspirational",
+              "pain",
+              "social"
+            ],
+            "description": "Which framework frame to generate: aspirational (future success), pain (current pain), social (belonging)."
+          },
+          "product_hook": {
+            "description": "Optional product/feature to weave into the frame. Omit for persona-only framing.",
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "persona_id",
+          "frame_type"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "load_persona",
+      "title": "Wczytaj zapisaną personę",
+      "description": "Recall a previously built persona by ID, or list the user's recent personas (default 5 most recent) so the model can resume work in a new conversation without rebuilding from scratch. Returns the same persona shape as build_persona (single mode) or a list of recent personas with summary fields (list mode). Use when the user references 'Małgosia z poprzedniej rozmowy', 'wczorajsza persona', 'moje persony', or the model needs persona context to fulfil a follow-up copywriting task. Note: list mode caps at 20 results; unknown persona_id returns a graceful 'not found' (not an error).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "persona_id": {
+            "description": "Specific persona ID to load. Omit for list mode (recent personas).",
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 40
+          },
+          "limit": {
+            "description": "List-mode result cap (default 5, max 20). Applied only when persona_id is omitted.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "export_persona",
+      "title": "Wyeksportuj personę",
+      "description": "Serialize a persona to Markdown (workshop-friendly, headings + sections) or JSON (machine-friendly, for feeding into other tools or storage) and return it inline so the widget can trigger app.downloadFile() or the user can copy/paste. Returns the rendered content string, the filename (slugified persona name + date), and the byte count. Use when the user asks to 'wyeksportuj personę', 'daj mi tę personę w markdown', or clicks the export button in the widget. Note: does NOT write a file server-side — the widget is responsible for download/clipboard.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "persona_id": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 40,
+            "description": "ID of the persona to export."
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "markdown",
+              "json"
+            ],
+            "description": "Output format. Markdown for human reading / workshop docs; JSON for downstream tools."
+          }
+        },
+        "required": [
+          "persona_id",
+          "format"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    }
+  ],
+  "toolsMetadata": {
+    "build_persona": {
+      "ui": {
+        "resourceUri": "ui://persona-empatia/widget"
+      }
+    },
+    "refine_persona": {
+      "ui": {
+        "resourceUri": "ui://persona-empatia/widget",
+        "visibility": [
+          "app"
+        ]
+      }
+    },
+    "generate_frame": {
+      "ui": {
+        "resourceUri": "ui://persona-empatia/widget",
+        "visibility": [
+          "app"
+        ]
+      }
+    },
+    "load_persona": {
+      "ui": {
+        "resourceUri": "ui://persona-empatia/widget"
+      }
+    },
+    "export_persona": {
+      "ui": {
+        "resourceUri": "ui://persona-empatia/widget",
+        "visibility": [
+          "app"
+        ]
+      }
+    }
+  },
+  "resources": [
+    {
+      "name": "persona_widget",
+      "uri": "ui://persona-empatia/widget",
+      "description": "Interactive copywriter's persona builder using the Tkaczyk framework (Maslow pyramid + 3F triangle + 6 motivations + sensory empathy map + 'dlaczego dziś?'). Renders SVG visualizations with draggable inputs, generated frames, and per-dimension regeneration.",
+      "mimeType": "text/html;profile=mcp-app"
+    }
+  ],
+  "resourceTemplates": [],
+  "prompts": [
+    {
+      "name": "nowa-persona",
+      "title": "Stwórz personę copywriterską dla mojego biznesu",
+      "description": "Przeprowadza krótki, ~30-sekundowy wywiad o biznesie użytkownika, a następnie wywołuje narzędzie build_persona, aby otworzyć widget z gotowym draftem persony."
+    },
+    {
+      "name": "przepisz-z-persona",
+      "title": "Przepisz mój tekst pod konkretną personę",
+      "description": "Korzysta z LLM użytkownika (nie Workers AI) do przepisania wklejonego copy z osadzeniem w konkretnej, wcześniej zapisanej personie. Zwraca: 2 elementy frameworku zignorowane przez oryginał, propozycję rewrite, listę 'słów-wytrychów' do usunięcia.",
+      "arguments": [
+        {
+          "name": "persona_id",
+          "description": "ID wcześniej zapisanej persony, pod którą przepisać copy.",
+          "required": true
+        },
+        {
+          "name": "copy",
+          "description": "Oryginalny tekst copy (≤1000 znaków).",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "checks": {
+    "probe": {
+      "status": "ok",
+      "detail": "HTTP initialize probe succeeded via streamable-http."
+    },
+    "connection": {
+      "status": "ok",
+      "detail": "Connected and initialized successfully."
+    },
+    "initialization": {
+      "status": "ok",
+      "detail": "Initialization info captured."
+    },
+    "capabilities": {
+      "status": "ok",
+      "detail": "Server capabilities captured."
+    },
+    "tools": {
+      "status": "ok",
+      "detail": "5 tools discovered."
+    },
+    "resources": {
+      "status": "ok",
+      "detail": "1 resource discovered."
+    },
+    "resourceTemplates": {
+      "status": "ok",
+      "detail": "0 resource templates discovered."
+    },
+    "prompts": {
+      "status": "ok",
+      "detail": "2 prompts discovered."
+    }
+  },
+  "error": null
+}

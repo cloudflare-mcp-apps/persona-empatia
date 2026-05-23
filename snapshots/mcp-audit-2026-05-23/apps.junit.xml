@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="MCP Apps Conformance" tests="7" failures="0" skipped="0" time="1.970">
+  <testsuite name="MCP Apps Conformance" tests="7" failures="0" skipped="0" time="1.970">
+    <testcase name="UI Tools Present" classname="https://persona-empatia.wtyczki.ai/mcp" time="0.000"/>
+    <testcase name="UI Tool Metadata Valid" classname="https://persona-empatia.wtyczki.ai/mcp" time="0.000"/>
+    <testcase name="UI Tool Input Schema Valid" classname="https://persona-empatia.wtyczki.ai/mcp" time="0.000"/>
+    <testcase name="Listed UI Resources Valid" classname="https://persona-empatia.wtyczki.ai/mcp" time="0.000"/>
+    <testcase name="UI Resources Readable" classname="https://persona-empatia.wtyczki.ai/mcp" time="0.000"/>
+    <testcase name="UI Resource Contents Valid" classname="https://persona-empatia.wtyczki.ai/mcp" time="0.001"/>
+    <testcase name="UI Resource Metadata Valid" classname="https://persona-empatia.wtyczki.ai/mcp" time="0.001"/>
+  </testsuite>
+</testsuites>

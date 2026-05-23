@@ -1,0 +1,105 @@
+{
+  "generatedAt": "2026-05-23T13:22:10.917Z",
+  "url": "https://persona-empatia.wtyczki.ai/mcp",
+  "chromeExecutable": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "orphanResources": [],
+  "orphanToolMeta": [],
+  "widgetReferencedUris": [],
+  "widgets": [
+    {
+      "uri": "ui://persona-empatia/widget",
+      "base": "widget",
+      "htmlBytes": 635991,
+      "hasFixture": true,
+      "csp": {
+        "connectDomains": [],
+        "resourceDomains": [
+          "https://assets.claude.ai",
+          "https://persistent.oaistatic.com",
+          "https://*.oaistatic.com"
+        ],
+        "baseUriDomains": []
+      },
+      "variants": {
+        "bare": {
+          "renderStatus": "ok",
+          "domSummary": {
+            "title": "Persona & Mapa Empatii",
+            "bodyTextLen": 40,
+            "bodyTextSample": "Błąd: MCP error -32601: Method not found",
+            "hasError": true,
+            "rootChildren": 1
+          },
+          "consoleErrors": [
+            "[persona] connect failed McpError: MCP error -32601: Method not found",
+            "Failed to load resource: the server responded with a status of 404 (Not Found)"
+          ],
+          "consoleWarns": [],
+          "cspViolations": [],
+          "networkFailures": [],
+          "pageErrors": [],
+          "screenshotPath": "/Users/patpil/cloudflare_mcp_projects/cloudflare_mcp_apps/projects/persona-empatia/snapshots/mcp-audit-2026-05-23/ui/widget-bare-desktop-light.png"
+        },
+        "bareMobileDark": {
+          "renderStatus": "ok",
+          "domSummary": {
+            "title": "Persona & Mapa Empatii",
+            "bodyTextLen": 40,
+            "bodyTextSample": "Błąd: MCP error -32601: Method not found",
+            "hasError": true,
+            "rootChildren": 1
+          },
+          "consoleErrors": [
+            "[persona] connect failed McpError: MCP error -32601: Method not found"
+          ],
+          "consoleWarns": [],
+          "cspViolations": [],
+          "networkFailures": [],
+          "pageErrors": [],
+          "screenshotPath": "/Users/patpil/cloudflare_mcp_projects/cloudflare_mcp_apps/projects/persona-empatia/snapshots/mcp-audit-2026-05-23/ui/widget-bare-mobile-dark.png"
+        },
+        "csp": {
+          "renderStatus": "ok",
+          "domSummary": {
+            "title": "Persona & Mapa Empatii",
+            "bodyTextLen": 40,
+            "bodyTextSample": "Błąd: MCP error -32601: Method not found",
+            "hasError": true,
+            "rootChildren": 1
+          },
+          "consoleErrors": [
+            "[persona] connect failed McpError: MCP error -32601: Method not found"
+          ],
+          "consoleWarns": [],
+          "cspViolations": [],
+          "networkFailures": [],
+          "pageErrors": [],
+          "screenshotPath": "/Users/patpil/cloudflare_mcp_projects/cloudflare_mcp_apps/projects/persona-empatia/snapshots/mcp-audit-2026-05-23/ui/widget-csp.png"
+        },
+        "roundtrip": {
+          "renderStatus": "ok",
+          "domSummary": {
+            "title": "MCP App audit host shim",
+            "bodyTextLen": 54,
+            "bodyTextSample": "mcp-audit-shim · tool-result delivered (build_persona)",
+            "hasError": false,
+            "rootChildren": null
+          },
+          "consoleErrors": [],
+          "consoleWarns": [],
+          "cspViolations": [],
+          "networkFailures": [],
+          "pageErrors": [],
+          "screenshotPath": "/Users/patpil/cloudflare_mcp_projects/cloudflare_mcp_apps/projects/persona-empatia/snapshots/mcp-audit-2026-05-23/ui/widget-roundtrip.png"
+        }
+      }
+    }
+  ],
+  "summary": {
+    "widgetsRendered": 1,
+    "widgetsWithCspBlocks": 0,
+    "widgetsWithRoundtripHealthy": 1,
+    "widgetsWithBareErrors": 1,
+    "totalConsoleErrors": 4
+  }
+}
