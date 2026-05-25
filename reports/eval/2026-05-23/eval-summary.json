@@ -1,0 +1,51 @@
+[
+  {
+    "name": "happy — build_persona from business + hints",
+    "accuracy": 1,
+    "avgTokens": 3573
+  },
+  {
+    "name": "happy — load_persona list mode (no args)",
+    "accuracy": 1,
+    "avgTokens": 3583
+  },
+  {
+    "name": "happy — generate_frame aspirational with persona_id",
+    "accuracy": 1,
+    "avgTokens": 3414,
+    "toolErrors": [
+      "Nie znaleziono persony o podanym ID."
+    ]
+  },
+  {
+    "name": "happy — refine_persona age delta from NL",
+    "accuracy": 1,
+    "avgTokens": 3401.3333333333335,
+    "toolErrors": [
+      "Nie znaleziono persony o podanym ID."
+    ]
+  },
+  {
+    "name": "happy — export_persona markdown",
+    "accuracy": 1,
+    "avgTokens": 3390.6666666666665,
+    "toolErrors": [
+      "Nie znaleziono persony o podanym ID."
+    ]
+  },
+  {
+    "name": "multi-turn — build_persona then generate_frame (pain)",
+    "accuracy": 1,
+    "avgTokens": 9156.333333333334
+  },
+  {
+    "name": "negative — documentation question (framework explainer)",
+    "accuracy": 1,
+    "avgTokens": 2616.6666666666665
+  },
+  {
+    "name": "negative — vague non-actionable musing",
+    "accuracy": 1,
+    "avgTokens": 1729.3333333333333
+  }
+]
