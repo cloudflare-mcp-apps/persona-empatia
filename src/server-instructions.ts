@@ -52,6 +52,9 @@ Targets Polish-speaking users (wtyczki.ai). Respond to the user in Polish unless
 - Authentication is automatic (WorkOS AuthKit JWT); no per-user credentials.
 - The widget is the primary surface for refinement; build_persona returns a fully formed draft so the widget opens with content, not a blank state.
 - Persona JSON exported via export_persona is forward-compatible with the planned audyt-copy server.
+
+
+Respond in Polish by default; if the user writes in another language, reply in that language.
 `.trim();
 
 export default SERVER_INSTRUCTIONS;
