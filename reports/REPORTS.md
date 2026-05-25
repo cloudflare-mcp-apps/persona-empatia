@@ -14,8 +14,8 @@ Source fingerprint: `660581c` · package version: `1.0.0` · refreshed: 2026-05-
 
 | Report | Generator | Generated | source@ | Status |
 |--------|-----------|-----------|---------|--------|
-| `snapshot.md` | `/snapshot-server` | — | `—` | ⬜ MISSING |
-| `description.md` | `/describe-server` | — | `—` | ⬜ MISSING |
+| `snapshot.md` | `/snapshot-server` | 2026-05-25 | `660581c` | ✅ FRESH |
+| `description.md` | `/describe-server` | 2026-05-25 | `660581c` | ✅ FRESH |
 | `design-audit.md` | `/audit-design` | — | `—` | ⬜ MISSING |
 | `ui-audit.md` | `/improve-ui-with-shadcn` | — | `—` | ⬜ MISSING |
 | `ideas.md` | `/improve` | — | `—` | ⬜ MISSING |
