@@ -53,7 +53,7 @@ export function createServer(env: Env): McpServer {
   const server = new McpServer(
     { name: SERVER_CONFIG.NAME, version: SERVER_CONFIG.VERSION },
     {
-      capabilities: { tools: {}, prompts: { listChanged: true }, resources: { listChanged: true } },
+      capabilities: { tools: {}, prompts: {}, resources: {} },
       instructions: SERVER_INSTRUCTIONS,
     },
   );
