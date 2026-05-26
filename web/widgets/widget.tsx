@@ -321,16 +321,18 @@ function Widget() {
   return (
     <div className="h-[500px] flex flex-col bg-background text-foreground overflow-hidden" style={safeAreaStyle}>
       <div className="flex-shrink-0">
-        <PersonaHeader
-          persona={persona}
-          onPatch={patchPersona}
-          onExportMd={() => requestExport("markdown")}
-          onExportJson={() => requestExport("json")}
-        />
+        <div className="w-full max-w-3xl mx-auto">
+          <PersonaHeader
+            persona={persona}
+            onPatch={patchPersona}
+            onExportMd={() => requestExport("markdown")}
+            onExportJson={() => requestExport("json")}
+          />
+        </div>
       </div>
 
       <Tabs defaultValue="profil" className="flex-1 min-h-0 flex flex-col">
-        <TabsList className="grid grid-cols-4 mx-3 mt-2 flex-shrink-0">
+        <TabsList className="grid grid-cols-4 w-full max-w-3xl mx-auto mt-2 flex-shrink-0">
           <TabsTrigger value="profil" className="text-xs">Profil</TabsTrigger>
           <TabsTrigger value="motywacje" className="text-xs">Motywacje</TabsTrigger>
           <TabsTrigger value="empatia" className="text-xs">Empatia</TabsTrigger>
@@ -345,6 +347,7 @@ function Widget() {
         </TabsList>
 
         <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3 pt-3">
+          <div className="w-full max-w-3xl mx-auto">
           <TabsContent value="profil" className="mt-0 grid grid-cols-2 gap-4">
             <div>
               <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium mb-1.5">
@@ -405,6 +408,7 @@ function Widget() {
           {refineError && (
             <p className="mt-2 text-xs text-destructive">{refineError}</p>
           )}
+          </div>
         </div>
       </Tabs>
     </div>
