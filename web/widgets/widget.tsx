@@ -412,7 +412,7 @@ function Widget() {
           </div>
         </div>
       </Tabs>
-      <WtyczkiFooter app={app} slug="persona-empatia" cta="Asystent pod Twój warsztat? Porozmawiajmy" />
+      <WtyczkiFooter app={app} slug="persona-empatia" />
     </div>
   );
 }
