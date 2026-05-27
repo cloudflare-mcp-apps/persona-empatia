@@ -27,7 +27,7 @@ const CATALOG: CatalogEntry[] = [
 ];
 
 // AUTO-SYNCED-CTA from /wtyczki-catalog.json (ctas[slug], else defaultCta) — run `npm run sync:footer-catalog`. Edit the JSON, not this.
-const FOOTER_CTA = 'Wtyczi marketingowe dla Twojej firmy? Porozmawiajmy';
+const FOOTER_CTA = 'Wtyczki marketingowe AI dla Twojej firmy? Porozmawiajmy';
 
 function tagged(path: string, slug: string, medium: 'xsell' | 'b2b' | 'badge'): string {
   return `${SITE}${path}?utm_source=mcp&utm_medium=widget_footer&utm_campaign=${slug}-${medium}`;
