@@ -8,6 +8,7 @@ import {
 } from "@modelcontextprotocol/ext-apps";
 import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 import "../styles/globals.css";
+import { WtyczkiFooter } from '../components/wtyczki-footer';
 import type {
   FramePayload,
   FrameType,
@@ -411,6 +412,7 @@ function Widget() {
           </div>
         </div>
       </Tabs>
+      <WtyczkiFooter app={app} slug="persona-empatia" cta="Asystent pod Twój warsztat? Porozmawiajmy" />
     </div>
   );
 }
