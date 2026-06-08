@@ -28,6 +28,16 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "persona-empatia",
   "main": "src/index.ts",
+
+  "migrations": [
+    { "new_sqlite_classes": ["RateLimiterDO"], "tag": "add-rate-limiter-do" }
+  ],
+
+  "durable_objects": {
+    "bindings": [
+      { "class_name": "RateLimiterDO", "name": "RATE_LIMITER_DO" }
+    ]
+  },
   "compatibility_date": "2025-03-10",
   "compatibility_flags": ["nodejs_compat"],
 
