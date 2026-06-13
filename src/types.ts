@@ -32,6 +32,13 @@ export interface Env {
   DB: D1Database;
 
   /**
+   * Workers Analytics Engine — fleet-wide usage dataset (`mcp_usage`).
+   * One data point per tools/call: blobs = [server, userId, email, tool].
+   * Optional so local dev / tsc don't require the binding.
+   */
+  USAGE?: AnalyticsEngineDataset;
+
+  /**
    * WorkOS AuthKit domain for JWT verification and well-known endpoints.
    * Example: "exciting-domain-65.authkit.app"
    */

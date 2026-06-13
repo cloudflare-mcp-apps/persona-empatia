@@ -71,6 +71,19 @@
   ],
 
   /**
+   * Workers Analytics Engine — shared fleet usage dataset (`mcp_usage`).
+   * One data point per tools/call: blobs = [server, userId, email, tool].
+   * Read by the monitoring repo (src/collectors/mcp_usage.py) for per-user /
+   * per-server / per-tool KPIs. Same dataset across every server.
+   */
+  "analytics_engine_datasets": [
+    {
+      "binding": "USAGE",
+      "dataset": "mcp_usage"
+    }
+  ],
+
+  /**
    * Workers AI binding — required for persona draft + frame generation.
    * Routes through AI Gateway `mcp-production-gateway` (see src/ai/persona-generator.ts).
    */
